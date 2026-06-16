@@ -4,7 +4,7 @@ import Foundation
 ///
 /// Why in-process `NSAppleScript` (not `/usr/bin/osascript`): the App Store
 /// build runs under App Sandbox, which blocks spawning external executables
-/// — the same wall that killed the old `mediaremote-adapter` perl approach.
+/// — the same wall that killed the old perl-based adapter approach.
 /// `NSAppleScript` runs the script inside our own process via Apple Events,
 /// which the sandbox permits *given* the `scripting-targets` (or
 /// temporary-exception apple-events) entitlement plus the user's one-time

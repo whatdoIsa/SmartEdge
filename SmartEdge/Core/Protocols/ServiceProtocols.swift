@@ -18,7 +18,6 @@ import Combine
 // MediaServiceProtocol - defined in MediaServiceProtocol.swift
 // SettingsServiceProtocol - defined in SettingsServiceProtocol.swift (to be created)
 // SystemServiceProtocol - defined in SystemServiceProtocol.swift (to be created)
-// SystemHUDServiceProtocol - defined in SystemHUDServiceProtocol.swift (to be created)
 
 // MARK: - System Monitoring Protocols
 
@@ -71,8 +70,6 @@ protocol SystemServiceProtocol {
     func initialize() async throws
     func requestAllPermissions() async throws -> Bool
 }
-
-// MockSystemHUDService is defined in SystemHUDServiceProtocol.swift to avoid circular dependencies
 
 // MockMediaService is defined in MediaServiceProtocol.swift to avoid circular dependencies
 

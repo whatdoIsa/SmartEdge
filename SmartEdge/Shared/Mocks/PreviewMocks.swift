@@ -42,33 +42,6 @@ class PreviewMockMediaService: MediaServiceProtocol {
 }
 
 @MainActor
-class PreviewMockSystemHUDService: SystemHUDServiceProtocol {
-    weak var delegate: SystemHUDServiceDelegate?
-    var isIntercepting: Bool = false
-    var currentHUD: SystemHUDInfo? = nil
-    var hasAccessibilityPermission: Bool = false
-    var hudPublisher: AnyPublisher<SystemHUDInfo?, Never> = Just(nil).eraseToAnyPublisher()
-    var interceptingPublisher: AnyPublisher<Bool, Never> = Just(false).eraseToAnyPublisher()
-
-    func requestAccessibilityPermission() {}
-    func startInterception() async throws {}
-    func stopInterception() async {}
-    func startIntercepting() {}
-    func stopIntercepting() {}
-    func handleVolumeChange(_ level: Float, isMuted: Bool) {}
-    func handleBrightnessChange(_ level: Float) {}
-    func handleKeyboardBacklightChange(_ level: Float) {}
-    func checkPermissions() async -> HUDPermissions {
-        HUDPermissions(
-            accessibility: true,
-            inputMonitoring: true,
-            canInterceptHUD: true
-        )
-    }
-    func requestPermissions() async -> Bool { true }
-}
-
-@MainActor
 class PreviewMockSystemService: SystemServiceProtocol {
     var systemEventPublisher: AnyPublisher<SystemEvent, Never> {
         Empty().eraseToAnyPublisher()

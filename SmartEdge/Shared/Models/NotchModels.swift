@@ -2,52 +2,9 @@ import Foundation
 import EventKit
 import SwiftUI
 
-// MARK: - Missing Types for Build Compatibility
-
-// System HUD Type enum for build compatibility
-enum SystemHUDType: Equatable {
-    case volume(Float)
-    case brightness(Float)
-    case keyboardBacklight(Float)
-    case airplayConnecting
-    case airplayConnected(String)
-    case airplayDisconnected
-    case doNotDisturb(Bool)
-    
-    var iconName: String {
-        switch self {
-        case .volume(let level):
-            if level == 0 { return "speaker.slash.fill" }
-            if level < 0.33 { return "speaker.1.fill" }
-            if level < 0.67 { return "speaker.2.fill" }
-            return "speaker.3.fill"
-        case .brightness: return "sun.max.fill"
-        case .keyboardBacklight: return "keyboard.badge.ellipsis"
-        case .airplayConnecting, .airplayConnected: return "airplayvideo"
-        case .airplayDisconnected: return "airplayvideo.slash"
-        case .doNotDisturb(let enabled): 
-            return enabled ? "moon.fill" : "moon"
-        }
-    }
-    
-    var title: String {
-        switch self {
-        case .volume: return "Volume"
-        case .brightness: return "Brightness"
-        case .keyboardBacklight: return "Keyboard Backlight"
-        case .airplayConnecting: return "Connecting to AirPlay..."
-        case .airplayConnected(let device): return "Connected to \(device)"
-        case .airplayDisconnected: return "AirPlay Disconnected"
-        case .doNotDisturb(let enabled): 
-            return enabled ? "Do Not Disturb On" : "Do Not Disturb Off"
-        }
-    }
-}
-
 enum NotchContent: Equatable {
     case collapsed
     case musicPlayer(isPlaying: Bool, title: String?, artist: String?)
-    case systemHUD(info: SystemHUDInfo)
     case calendar(event: CalendarEvent?)
     case shelf(operation: ShelfOperation)
     case systemStatus(battery: BatteryInfo?, bluetooth: BluetoothInfo?)
@@ -63,8 +20,6 @@ enum NotchContent: Equatable {
             return true
         case let (.musicPlayer(lhsPlaying, lhsTitle, lhsArtist), .musicPlayer(rhsPlaying, rhsTitle, rhsArtist)):
             return lhsPlaying == rhsPlaying && lhsTitle == rhsTitle && lhsArtist == rhsArtist
-        case let (.systemHUD(lhsInfo), .systemHUD(rhsInfo)):
-            return lhsInfo == rhsInfo
         case let (.calendar(lhsEvent), .calendar(rhsEvent)):
             return lhsEvent == rhsEvent
         case let (.shelf(lhsOperation), .shelf(rhsOperation)):
@@ -130,31 +85,8 @@ struct NotchPosition {
     static let center = NotchPosition(x: 0, y: 0)
 }
 
-// MARK: - HUD Integration Models
-struct SystemHUDInfo: Equatable {
-    let type: SystemHUDType
-    let value: Double
-    let isMuted: Bool
-    let timestamp: Date
-    
-    init(type: SystemHUDType, value: Double, isMuted: Bool = false) {
-        self.type = type
-        self.value = value
-        self.isMuted = isMuted
-        self.timestamp = Date()
-    }
-    
-    static func == (lhs: SystemHUDInfo, rhs: SystemHUDInfo) -> Bool {
-        // Compare all fields except timestamp for equality
-        return lhs.type == rhs.type && 
-               lhs.value == rhs.value && 
-               lhs.isMuted == rhs.isMuted
-    }
-}
-
 // MARK: - Content Priority System
 enum NotchContentPriority: Int, CaseIterable, Comparable {
-    case systemHUD = 100      // Highest priority - interrupts everything
     case calendar = 80        // High priority - meeting reminders
     case shelf = 60           // Medium priority - file operations
     case musicPlayer = 40     // Normal priority - default content
@@ -192,8 +124,6 @@ extension NotchContent {
             return .settings
         case .musicPlayer:
             return .musicPlayer
-        case .systemHUD:
-            return .systemHUD
         case .calendar:
             return .calendar
         case .shelf:
@@ -219,17 +149,15 @@ extension NotchContent {
 
     var isTemporary: Bool {
         switch self {
-        case .systemHUD, .calendar, .systemStatus, .notification:
+        case .calendar, .systemStatus, .notification:
             return true  // These disappear after timeout
         case .collapsed, .musicPlayer, .shelf, .pomodoro, .clipboardHistory, .actions, .settings:
             return false
         }
     }
-    
+
     var autoHideDelay: TimeInterval? {
         switch self {
-        case .systemHUD:
-            return 2.0  // Quick fade for volume/brightness
         case .calendar:
             return 5.0  // Longer display for events
         case .systemStatus:

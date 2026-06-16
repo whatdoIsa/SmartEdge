@@ -17,7 +17,6 @@ final class NotchViewModel: ObservableObject {
     
     // MARK: - Service Dependencies
     private let mediaService: MediaServiceProtocol
-    private let systemHUDService: any SystemHUDServiceProtocol
     private let calendarService: any CalendarServiceProtocol
     private let shelfService: any ShelfServiceProtocol
     private let batteryService: any BatteryServiceProtocol
@@ -37,14 +36,12 @@ final class NotchViewModel: ObservableObject {
     
     init(
         mediaService: MediaServiceProtocol,
-        systemHUDService: any SystemHUDServiceProtocol,
         calendarService: any CalendarServiceProtocol,
         shelfService: any ShelfServiceProtocol,
         batteryService: any BatteryServiceProtocol,
         bluetoothService: any BluetoothServiceProtocol
     ) {
         self.mediaService = mediaService
-        self.systemHUDService = systemHUDService
         self.calendarService = calendarService
         self.shelfService = shelfService
         self.batteryService = batteryService
@@ -260,15 +257,6 @@ final class NotchViewModel: ObservableObject {
     }
 
     private func setupServiceObservers() {
-        // SystemHUD Service
-        systemHUDService.hudPublisher
-            .compactMap { $0 }
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] hudInfo in
-                self?.handleSystemHUD(hudInfo)
-            }
-            .store(in: &cancellables)
-        
         // Media Service
         mediaService.currentTrackPublisher
             .receive(on: DispatchQueue.main)
@@ -322,12 +310,7 @@ final class NotchViewModel: ObservableObject {
     }
     
     // MARK: - Service Event Handlers
-    
-    private func handleSystemHUD(_ hudInfo: SystemHUDInfo) {
-        let content = NotchContent.systemHUD(info: hudInfo)
-        forceShowContent(content)
-    }
-    
+
     private func handleMediaUpdate(_ mediaInfo: NowPlayingInfo?) {
         // We used to gate on `playbackState == .playing` here, which meant
         // a paused track (or one where the helper hadn't surfaced a
@@ -683,7 +666,7 @@ final class NotchViewModel: ObservableObject {
         switch content {
         case .collapsed:
             return false
-        case .musicPlayer, .calendar, .shelf, .settings, .notification, .pomodoro, .clipboardHistory, .actions, .systemHUD, .systemStatus:
+        case .musicPlayer, .calendar, .shelf, .settings, .notification, .pomodoro, .clipboardHistory, .actions, .systemStatus:
             // systemStatus used to stay collapsed under the camera-notch
             // pillow, which meant low-battery and bluetooth alerts surfaced
             // a content change the user couldn't see. Now it expands like

@@ -1,7 +1,7 @@
 import Foundation
 
-/// Translates `SystemEvent`s (volume change, brightness change, media
-/// playback, sleep/wake, screen change) into notch UI updates.
+/// Translates `SystemEvent`s (media playback, sleep/wake, screen change)
+/// into notch UI updates.
 ///
 /// Extracted from AppCoordinator with the P-tier refactor. The processing
 /// rules themselves don't change here — what moved is the *ownership*:
@@ -44,12 +44,6 @@ final class SystemEventCoordinator {
 
     private func process(_ event: SystemEvent) async {
         switch event {
-        case .volumeChanged(let level):
-            showHUD(.volume(level), value: Double(level))
-
-        case .brightnessChanged(let level):
-            showHUD(.brightness(level), value: Double(level))
-
         case .mediaPlaybackChanged(let isPlaying):
             handleMediaPlaybackChange(isPlaying: isPlaying)
 
@@ -71,18 +65,6 @@ final class SystemEventCoordinator {
             Task {
                 try await windowManager.updateNotchPosition()
             }
-        }
-    }
-
-    /// Builds a system HUD payload and pushes it to the notch, expanding
-    /// the notch if it wasn't already open so the user actually sees the
-    /// volume/brightness change feedback.
-    private func showHUD(_ type: SystemHUDType, value: Double) {
-        let info = SystemHUDInfo(type: type, value: value, isMuted: false)
-        let content = NotchContent.systemHUD(info: info)
-        notchViewModel.setContent(content)
-        if !notchViewModel.isExpanded {
-            notchViewModel.expand(to: content)
         }
     }
 

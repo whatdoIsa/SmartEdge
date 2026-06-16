@@ -44,13 +44,6 @@ enum SettingsKeys {
     static let musicControlsEnabled = "musicControlsEnabled"
     static let showMusicInNotch = "showMusicInNotch"
 
-    // MARK: - System HUD
-    static let interceptSystemHUD = "interceptSystemHUD"
-    static let hudDisplayDuration = "hudDisplayDuration"
-    static let interceptVolume = "interceptVolume"
-    static let interceptBrightness = "interceptBrightness"
-    static let interceptKeyboard = "interceptKeyboard"
-
     // MARK: - Calendar
     static let showUpcomingEvents = "showUpcomingEvents"
     static let eventLookAhead = "eventLookAhead"
@@ -96,8 +89,7 @@ enum SettingsKeys {
         cornerRadius, notchPulseOnTrackChange, notchPulseDurationSeconds,
         showOnNonNotchDisplays, notchDisplayPolicy,
         showAlbumArt, enableVisualizer, visualizerStyle,
-        musicControlsEnabled, showMusicInNotch, interceptSystemHUD, hudDisplayDuration,
-        interceptVolume, interceptBrightness, interceptKeyboard, showUpcomingEvents,
+        musicControlsEnabled, showMusicInNotch, showUpcomingEvents,
         eventLookAhead, showAllDayEvents, calendarRefreshInterval, shelfStorageLimit,
         enableAirDropIntegration, autoDeleteOldFiles, shelfRetentionDays,
         showBatteryStatus, batteryLowThreshold, showBluetoothStatus, showWiFiStatus,
@@ -109,7 +101,7 @@ enum SettingsKeys {
     /// DEBUG-only `validate()` check below will trip on the next build if
     /// you forgot, surfacing the omission *before* `resetToDefaults`
     /// silently leaves orphan UserDefaults entries on disk.
-    private static let expectedUserSettingsCount = 40
+    private static let expectedUserSettingsCount = 35
 
     #if DEBUG
     /// Runtime invariant check. Called from `AppCoordinator.init` so any

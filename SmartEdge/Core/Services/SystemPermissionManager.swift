@@ -64,7 +64,7 @@ final class SystemPermissionManager: ObservableObject {
     }
     
     func hasInputMonitoringPermission() async -> Bool {
-        // Earlier this called `CGEvent.tapCreate` and discarded the result
+        // Earlier this created an event tap and discarded the result
         // without disabling/releasing the tap — every call leaked a CFMachPort
         // *and* registered a phantom callback that fired on every subsequent
         // keystroke until the process exited. With this method polled at
@@ -119,7 +119,7 @@ final class SystemPermissionManager: ObservableObject {
         // OS-level Input Monitoring request the same way Apple's own
         // sample code (Permission Manager TN3147) does. It returns
         // synchronously; the actual approval is async via the system
-        // prompt UI. Replaces the leaky `CGEvent.tapCreate` we used to
+        // prompt UI. Replaces the leaky event tap we used to
         // call here — same leak rationale as `hasInputMonitoringPermission()`.
         let granted = IOHIDRequestAccess(kIOHIDRequestTypeListenEvent)
         if !granted {
@@ -165,7 +165,7 @@ final class SystemPermissionManager: ObservableObject {
     // The three `openXxxPreferences` paths used to call `showPermissionAlert`
     // which fires `NSAlert.runModal()`. Blocking modals from background code
     // were the root cause of "권한 다 켰는데 다이얼로그 또 뜬다" — on a dev
-    // rebuild the `AXIsProcessTrusted` / `CGEvent.tapCreate` checks briefly
+    // rebuild the `AXIsProcessTrusted` / event-tap checks briefly
     // report false even when the user has the toggle on, which dropped us
     // into these helpers and surfaced a modal the user had no warning was
     // coming.

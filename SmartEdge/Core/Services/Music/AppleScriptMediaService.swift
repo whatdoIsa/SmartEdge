@@ -4,7 +4,7 @@ import Combine
 
 /// Now-Playing service backed by AppleScript control of Apple Music and
 /// Spotify desktop apps. This is the App-Store-compatible replacement for
-/// the old `mediaremote-adapter` (perl + MediaRemote private framework),
+/// the old perl-based adapter (MediaRemote private framework),
 /// which the sandbox + App Review prohibit.
 ///
 /// Trade-offs vs the old approach (documented for honesty):

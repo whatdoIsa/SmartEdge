@@ -13,11 +13,7 @@ struct AppSettings: Codable {
     var showAlbumArt: Bool = true
     var showProgressBar: Bool = true
     var enableMusicNotifications: Bool = true
-    
-    // System HUD Settings
-    var interceptSystemHUD: Bool = true
-    var hudDisplayDuration: Double = 2.0
-    
+
     // Calendar Settings
     var calendarEnabled: Bool = false
     var showUpcomingEvents: Bool = true

@@ -52,10 +52,6 @@ final class AppCoordinator: ObservableObject, AppCoordinatorProtocol {
         ServiceContainer.shared.createMusicPlayerViewModel()
     }()
     
-    private(set) lazy var hudViewModel: HUDViewModel = {
-        ServiceContainer.shared.createHUDViewModel()
-    }()
-    
     private(set) lazy var calendarViewModel: CalendarViewModel = {
         ServiceContainer.shared.createCalendarViewModel()
     }()
@@ -495,7 +491,6 @@ final class AppCoordinator: ObservableObject, AppCoordinatorProtocol {
         ServiceContainer.shared.pomodoroService.pause()
         ServiceContainer.shared.systemStatsService.stop()
         await ServiceContainer.shared.clipboardMonitorService.stopMonitoring()
-        ServiceContainer.shared.systemHUDService.stopIntercepting()
         ServiceContainer.shared.globalHotkeyManager.unregister()
         menuBarController.remove()
         isServicesRunning = false

@@ -5,7 +5,6 @@ enum SettingsPanel: String, CaseIterable, Identifiable {
     case general = "general"
     case notchDisplay = "notch"
     case musicPlayer = "music"
-    case systemHUD = "hud"
     case calendar = "calendar"
     case shelf = "shelf"
     case systemStatus = "status"
@@ -19,7 +18,6 @@ enum SettingsPanel: String, CaseIterable, Identifiable {
         case .general: return "General"
         case .notchDisplay: return "Notch Display"
         case .musicPlayer: return "Music Player"
-        case .systemHUD: return "System HUD"
         case .calendar: return "Calendar"
         case .shelf: return "Shelf"
         case .systemStatus: return "System Status"
@@ -33,7 +31,6 @@ enum SettingsPanel: String, CaseIterable, Identifiable {
         case .general: return "gearshape"
         case .notchDisplay: return "rectangle.and.hand.point.up.left"
         case .musicPlayer: return "music.note"
-        case .systemHUD: return "display"
         case .calendar: return "calendar"
         case .shelf: return "folder"
         case .systemStatus: return "battery.100"
@@ -78,13 +75,6 @@ final class SettingsViewModel: ObservableObject {
     @AppStorage(SettingsKeys.visualizerStyle) var visualizerStyle = VisualizerStyle.bars.rawValue
     @AppStorage(SettingsKeys.musicControlsEnabled) var musicControlsEnabled = true
     @AppStorage(SettingsKeys.showMusicInNotch) var showMusicInNotch = true
-
-    // MARK: - System HUD Settings
-    @AppStorage(SettingsKeys.interceptSystemHUD) var interceptSystemHUD = true
-    @AppStorage(SettingsKeys.hudDisplayDuration) var hudDisplayDuration: Double = 2.0
-    @AppStorage(SettingsKeys.interceptVolume) var interceptVolume = true
-    @AppStorage(SettingsKeys.interceptBrightness) var interceptBrightness = true
-    @AppStorage(SettingsKeys.interceptKeyboard) var interceptKeyboard = false
 
     // MARK: - Calendar Settings
     @AppStorage(SettingsKeys.showUpcomingEvents) var showUpcomingEvents = true

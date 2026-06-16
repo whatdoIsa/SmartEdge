@@ -100,7 +100,6 @@ struct NotchView: View {
         switch viewModel.currentContent {
         case .collapsed: return "SmartEdge notch"
         case .musicPlayer: return "Music player"
-        case .systemHUD: return "System HUD"
         case .calendar: return "Calendar"
         case .shelf: return "Shelf"
         case .systemStatus: return "System status"
@@ -257,13 +256,6 @@ struct NotchView: View {
                     removal: .scale.combined(with: .opacity)
                 ))
 
-        case .systemHUD:
-            HUDView(viewModel: appCoordinator.hudViewModel)
-                .transition(.asymmetric(
-                    insertion: .move(edge: .top).combined(with: .opacity),
-                    removal: .move(edge: .top).combined(with: .opacity)
-                ))
-
         case .calendar:
             CalendarView(viewModel: appCoordinator.calendarViewModel)
                 .transition(.asymmetric(
@@ -338,7 +330,6 @@ struct NotchView: View {
 #Preview {
     NotchView(viewModel: NotchViewModel(
         mediaService: PreviewMockMediaService(),
-        systemHUDService: PreviewMockSystemHUDService(),
         calendarService: PreviewMockCalendarService(),
         shelfService: PreviewMockShelfService(),
         batteryService: PreviewMockBatteryService(),
@@ -353,9 +344,3 @@ struct NotchView: View {
     ))
     .frame(width: 400, height: 120)
 }
-
-// MusicPlayerContentView / SystemHUDContentView and a SystemHUDType
-// `displayName` extension lived here as a scaffold from before the real
-// NotchView content switch (musicPlayer → MusicPlayerView, systemHUD →
-// HUDView). Nothing referenced them and the canonical icon/title lives
-// on `SystemHUDType` in NotchModels.swift. Removed.

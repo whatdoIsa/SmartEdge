@@ -3,7 +3,7 @@ import EventKit
 import Combine
 
 // NOTE: This entire file is disabled because all required mocks are defined
-// in feature-local PreviewMock* (NotchView.swift, HUDView.swift, MusicPlayerView.swift)
+// in feature-local PreviewMock* (NotchView.swift, MusicPlayerView.swift)
 // and the Mock* classes in ServiceProtocols.swift / per-protocol files.
 // Re-enabling requires bringing each Mock back into conformance with the current protocols.
 
@@ -75,40 +75,6 @@ class MockMediaService: MediaServiceProtocol {
     func toggleRepeat() async throws {}
 }
 */
-
-// MARK: - Mock SystemHUDService
-
-@MainActor
-class MockSystemHUDService: ObservableObject, SystemHUDServiceProtocol {
-    weak var delegate: SystemHUDServiceDelegate?
-
-    @Published var isIntercepting: Bool = false
-    @Published var currentHUD: SystemHUDInfo? = nil
-    @Published var hasAccessibilityPermission: Bool = false
-
-    var hudPublisher: AnyPublisher<SystemHUDInfo?, Never> {
-        $currentHUD.eraseToAnyPublisher()
-    }
-
-    var interceptingPublisher: AnyPublisher<Bool, Never> {
-        $isIntercepting.eraseToAnyPublisher()
-    }
-
-    func requestAccessibilityPermission() {}
-    func startIntercepting() {}
-    func stopIntercepting() {}
-    func handleVolumeChange(_ level: Float, isMuted: Bool) {}
-    func handleBrightnessChange(_ level: Float) {}
-    func handleKeyboardBacklightChange(_ level: Float) {}
-
-    func startInterception() async throws {
-        // Mock implementation
-    }
-
-    func stopInterception() async {
-        // Mock implementation
-    }
-}
 
 // MARK: - Mock CalendarService
 

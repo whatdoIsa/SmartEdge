@@ -40,8 +40,6 @@ struct SettingsDetailView: View {
                 NotchSettingsPanel()
             case .musicPlayer:
                 MusicPlayerSettingsPanel()
-            case .systemHUD:
-                SystemHUDSettingsPanel()
             case .calendar:
                 CalendarSettingsPanel()
             case .shelf:

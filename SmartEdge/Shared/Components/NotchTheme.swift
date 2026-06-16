@@ -6,7 +6,7 @@ import SwiftUI
 ///
 /// Why this exists: scattered hardcoded `Color.black.opacity(0.5)`,
 /// `cornerRadius: 12`, `padding(.horizontal, 14)` literals across
-/// NotchView, MusicPlayerView, HUDView, ShelfView, etc. made tweaks
+/// NotchView, MusicPlayerView, ShelfView, etc. made tweaks
 /// risky — change one and the others drift visually. Centralizing
 /// them here lets us iterate on the "this feels like one cohesive
 /// surface" gestalt without playing whack-a-mole.
@@ -32,7 +32,7 @@ enum NotchTheme {
     /// state. Resolved at call-site by mixing in over `notchBackground`.
     static let accentWarm: Color = Color(red: 0.95, green: 0.55, blue: 0.45)
 
-    /// Cool accent for system/info states (HUD active, calendar nudge).
+    /// Cool accent for system/info states (calendar nudge).
     static let accentCool: Color = Color(red: 0.32, green: 0.58, blue: 0.96)
 
     // MARK: - Edges
