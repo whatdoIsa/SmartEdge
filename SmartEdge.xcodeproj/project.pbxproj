@@ -121,6 +121,8 @@
 		FABCCC53AF564533A56521CB /* SmartEdge/Core/Services/BrightnessMonitorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10AAAAE1A7F74A4A96F4ED01 /* SmartEdge/Core/Services/BrightnessMonitorService.swift */; };
 		FAD949AB7CA444B2A5FF6DF4 /* SmartEdge/Core/Coordinators/AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AA3B867B2664E1CAB912066 /* SmartEdge/Core/Coordinators/AppCoordinator.swift */; };
 		FBB68043AC6642E9BAD74B3A /* SmartEdge/Core/Services/MediaService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C1DE8DBACB34E0FADB6EB54 /* SmartEdge/Core/Services/MediaService.swift */; };
+		C1A2B3C4D5E6F70819203140 /* SmartEdge/Core/Services/Music/AppleScriptRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A2B3C4D5E6F70819203141 /* SmartEdge/Core/Services/Music/AppleScriptRunner.swift */; };
+		C2A2B3C4D5E6F70819203142 /* SmartEdge/Core/Services/Music/AppleScriptMediaService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2A2B3C4D5E6F70819203143 /* SmartEdge/Core/Services/Music/AppleScriptMediaService.swift */; };
 		FC3C222119574E8FAE041BA4 /* SmartEdge/Shared/Components/ErrorStatePreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = D26AF81DB97742E8B33A57B1 /* SmartEdge/Shared/Components/ErrorStatePreview.swift */; };
 		FCEC450B61FD4FC0A0FEC7D9 /* SmartEdge/Core/Services/NotchWindowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC8B3C5699D84DAAA3980480 /* SmartEdge/Core/Services/NotchWindowManager.swift */; };
 		FD695318CDD54D98AFF310D5 /* SmartEdge/Features/Clipboard/ClipboardContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3CB4943B94A476393D0C64E /* SmartEdge/Features/Clipboard/ClipboardContentView.swift */; };
@@ -203,6 +205,8 @@
 		7A5C05855EBE4BB89EBEAF1E /* SmartEdge/Shared/Components/LoadingViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Shared/Components/LoadingViews.swift; sourceTree = "<group>"; };
 		7B115C2F385A4B12A1F3509E /* SmartEdge/Features/HUD/HUDViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/HUD/HUDViewModel.swift; sourceTree = "<group>"; };
 		7C1DE8DBACB34E0FADB6EB54 /* SmartEdge/Core/Services/MediaService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Services/MediaService.swift; sourceTree = "<group>"; };
+		D1A2B3C4D5E6F70819203141 /* SmartEdge/Core/Services/Music/AppleScriptRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Services/Music/AppleScriptRunner.swift; sourceTree = "<group>"; };
+		D2A2B3C4D5E6F70819203143 /* SmartEdge/Core/Services/Music/AppleScriptMediaService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Services/Music/AppleScriptMediaService.swift; sourceTree = "<group>"; };
 		82D53A57F77747DDB343B15C /* SmartEdge/Features/Settings/Panels/PrivacySettingsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Settings/Panels/PrivacySettingsPanel.swift; sourceTree = "<group>"; };
 		86B8159C6F00432D8BFBFDED /* SmartEdge/Features/Settings/Components/NotchPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Settings/Components/NotchPreview.swift; sourceTree = "<group>"; };
 		8AA3B867B2664E1CAB912066 /* SmartEdge/Core/Coordinators/AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Coordinators/AppCoordinator.swift; sourceTree = "<group>"; };
@@ -680,6 +684,8 @@
 				7D0744CF115146B79FBD10E0 /* SmartEdge/Core/Services/FileSharingService.swift in Sources */,
 				1A06BD0A4FA84D72BFBDC02E /* SmartEdge/Core/Services/HUDInterceptionService.swift in Sources */,
 				FBB68043AC6642E9BAD74B3A /* SmartEdge/Core/Services/MediaService.swift in Sources */,
+				C1A2B3C4D5E6F70819203140 /* SmartEdge/Core/Services/Music/AppleScriptRunner.swift in Sources */,
+				C2A2B3C4D5E6F70819203142 /* SmartEdge/Core/Services/Music/AppleScriptMediaService.swift in Sources */,
 				F1E2D3C4B5A60011AB12CD34 /* SmartEdge/Core/Services/MediaRemoteAdapterClient.swift in Sources */,
 				19B523FA085A40D3A1794752 /* SmartEdge/Core/Services/MediaServiceAdapter.swift in Sources */,
 				FCEC450B61FD4FC0A0FEC7D9 /* SmartEdge/Core/Services/NotchWindowManager.swift in Sources */,

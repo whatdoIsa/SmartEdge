@@ -9,7 +9,11 @@ final class ServiceContainer: ObservableObject {
     
     // MARK: - Services (lazily initialized)
     lazy var settingsService: SettingsServiceProtocol = SettingsService()
-    lazy var mediaService: MediaServiceProtocol = MediaService()
+    // AppleScript-backed (Apple Music + Spotify) — App Store compatible.
+    // Replaced the old `MediaService` (mediaremote-adapter / perl), which
+    // the sandbox + App Review prohibit. Old service kept in the repo until
+    // M3 removes it.
+    lazy var mediaService: MediaServiceProtocol = AppleScriptMediaService()
     lazy var systemService: SystemServiceProtocol = SystemService()
     lazy var systemHUDService: any SystemHUDServiceProtocol = SystemHUDService()
     /// CGEvent-tap-backed interceptor for system volume/brightness keys.
