@@ -36,6 +36,8 @@ struct SettingsDetailView: View {
             switch selectedPanel {
             case .general:
                 GeneralSettingsPanel()
+            case .pro:
+                ProSettingsPanel()
             case .notchDisplay:
                 NotchSettingsPanel()
             case .musicPlayer:

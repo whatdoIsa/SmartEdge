@@ -192,8 +192,24 @@ final class AppCoordinator: ObservableObject, AppCoordinatorProtocol {
         await ServiceContainer.shared.clipboardMonitorService.startMonitoring()
     }
 
+    /// Freemium gate. Returns true if the Pro feature may proceed; otherwise
+    /// surfaces a brief upsell on the notch and returns false. Pro features
+    /// per the monetization decision: Shelf, Calendar, Pomodoro. Music +
+    /// clock + basic notch stay free.
+    @discardableResult
+    func requirePro(_ featureName: String) -> Bool {
+        if ServiceContainer.shared.storeService.isPro { return true }
+        notchViewModel.forceShowContent(.notification(
+            title: "SmartEdge Pro",
+            body: "\(featureName)은(는) Pro 기능입니다. 설정에서 잠금 해제하세요.",
+            icon: "lock.fill"
+        ))
+        return false
+    }
+
     /// Forces the notch to switch to the pomodoro timer view.
     func showPomodoro() {
+        guard requirePro("뽀모도로") else { return }
         notchViewModel.forceShowContent(.pomodoro)
     }
 

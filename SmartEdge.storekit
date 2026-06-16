@@ -1,0 +1,35 @@
+{
+  "identifier" : "A1B2C3D4",
+  "nonRenewingSubscriptions" : [],
+  "products" : [
+    {
+      "displayPrice" : "7.99",
+      "familyShareable" : false,
+      "internalID" : "PRO0000001",
+      "localizations" : [
+        {
+          "description" : "Unlock Shelf, Calendar, and Pomodoro.",
+          "displayName" : "SmartEdge Pro",
+          "locale" : "en_US"
+        },
+        {
+          "description" : "선반, 캘린더, 뽀모도로 잠금 해제.",
+          "displayName" : "SmartEdge Pro",
+          "locale" : "ko"
+        }
+      ],
+      "productID" : "com.smartedge.app.pro",
+      "referenceName" : "SmartEdge Pro",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_askToBuyEnabled" : false
+  },
+  "subscriptionGroups" : [],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

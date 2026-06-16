@@ -497,6 +497,12 @@ final class NotchViewModel: ObservableObject {
     private var pendingPulseWorkItem: DispatchWorkItem?
     
     private func handleCalendarEvents(_ events: [CalendarEvent]) {
+        // Calendar notch nudges are a Pro feature. Gate silently here —
+        // unlike Shelf/Pomodoro (user-initiated, so they get an upsell),
+        // calendar surfacing is automatic, so a locked free user simply
+        // sees nothing rather than a repeated upsell every refresh.
+        guard ServiceContainer.shared.storeService.isPro else { return }
+
         // Master toggle. User can keep the calendar service running (for
         // the Settings panel's "upcoming" list) but suppress the notch
         // pop-up.

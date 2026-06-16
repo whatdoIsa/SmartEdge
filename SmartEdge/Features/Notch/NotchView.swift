@@ -195,6 +195,9 @@ struct NotchView: View {
 
     private func handleDrop(_ providers: [NSItemProvider]) -> Bool {
         guard !providers.isEmpty else { return false }
+        // Shelf is a Pro feature — gate before accepting the drop. The gate
+        // surfaces a Pro upsell on the notch when locked.
+        guard appCoordinator.requirePro("선반") else { return false }
         // Immediate visual confirmation that the drop landed. We use
         // `.fileTransfer` (not `.airdropReceiving`) because AirDrop
         // receives go through macOS' own UI, not this NotchView onDrop —

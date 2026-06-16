@@ -12,6 +12,9 @@ final class ServiceContainer: ObservableObject {
     // AppleScript-backed (Apple Music + Spotify) — App Store compatible.
     lazy var mediaService: MediaServiceProtocol = AppleScriptMediaService()
     lazy var systemService: SystemServiceProtocol = SystemService()
+    /// StoreKit 2 Pro entitlement (Freemium gating). Single source of truth
+    /// for `isPro`; features read this to lock/unlock.
+    lazy var storeService: StoreService = StoreService()
     lazy var notchWindowManager: NotchWindowManagerProtocol = NotchWindowManager(serviceContainer: self)
     lazy var calendarService: any CalendarServiceProtocol = CalendarService()
     lazy var eventNotificationService: EventNotificationService = EventNotificationService()

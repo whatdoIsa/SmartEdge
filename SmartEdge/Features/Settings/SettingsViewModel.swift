@@ -3,6 +3,7 @@ import Combine
 
 enum SettingsPanel: String, CaseIterable, Identifiable {
     case general = "general"
+    case pro = "pro"
     case notchDisplay = "notch"
     case musicPlayer = "music"
     case calendar = "calendar"
@@ -16,6 +17,7 @@ enum SettingsPanel: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .general: return "General"
+        case .pro: return "SmartEdge Pro"
         case .notchDisplay: return "Notch Display"
         case .musicPlayer: return "Music Player"
         case .calendar: return "Calendar"
@@ -29,6 +31,7 @@ enum SettingsPanel: String, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .general: return "gearshape"
+        case .pro: return "sparkles"
         case .notchDisplay: return "rectangle.and.hand.point.up.left"
         case .musicPlayer: return "music.note"
         case .calendar: return "calendar"
