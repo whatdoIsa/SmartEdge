@@ -1,0 +1,110 @@
+name: Build & Test
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+# Cancel in-flight runs when a new commit lands on the same PR — saves
+# minutes on rapid pushes and avoids confusing "stale check failed" results.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build (Debug)
+    runs-on: macos-14
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        # Pin Xcode rather than relying on macos-14's default — keeps the
+        # build reproducible when GitHub upgrades the runner image. Bump
+        # the version when you upgrade locally.
+        run: sudo xcode-select -switch /Applications/Xcode_16.app
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          # Hash project + every Swift source so any edit busts the cache.
+          # Faster than `**/*` which would also include unrelated files.
+          key: deriveddata-${{ runner.os }}-${{ hashFiles('SmartEdge.xcodeproj/project.pbxproj', 'SmartEdge/**/*.swift') }}
+          restore-keys: |
+            deriveddata-${{ runner.os }}-
+
+      - name: Build
+        run: |
+          xcodebuild build \
+            -project SmartEdge.xcodeproj \
+            -scheme SmartEdge \
+            -configuration Debug \
+            -destination 'platform=macOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            | tee build.log
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
+
+  test:
+    name: Test (XCTest)
+    runs-on: macos-14
+    needs: build
+    timeout-minutes: 25
+    # The SmartEdgeTests target must exist for this job to do anything
+    # useful. Until the user adds it via Xcode (see
+    # claudedocs/tests-target-setup.md), this job will fail with
+    # "Scheme is not configured for testing." That's the intended forcing
+    # function to land the test target before merging the workflow.
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -switch /Applications/Xcode_16.app
+
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: deriveddata-${{ runner.os }}-${{ hashFiles('SmartEdge.xcodeproj/project.pbxproj', 'SmartEdge/**/*.swift', 'Tests/**/*.swift') }}
+          restore-keys: |
+            deriveddata-${{ runner.os }}-
+
+      - name: Run unit tests
+        run: |
+          xcodebuild test \
+            -project SmartEdge.xcodeproj \
+            -scheme SmartEdge \
+            -destination 'platform=macOS' \
+            -resultBundlePath TestResults.xcresult \
+            CODE_SIGNING_ALLOWED=NO \
+            | tee test.log
+
+      - name: Upload test log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-log
+          path: test.log
+
+      - name: Upload test result bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults.xcresult

@@ -1,0 +1,172 @@
+import Foundation
+import IOKit.ps
+import Combine
+
+protocol BatteryServiceDelegate: AnyObject {
+    func batteryService(_ service: BatteryService, didUpdateBatteryInfo info: BatteryInfo)
+}
+
+@MainActor
+final class BatteryService: ObservableObject {
+    // MARK: - Published Properties
+    
+    @Published var batteryInfo: BatteryInfo = BatteryInfo()
+    @Published var isCharging: Bool = false
+    @Published var batteryLevel: Double = 0.0
+    @Published var timeRemaining: TimeInterval = 0
+    
+    // MARK: - Properties
+    
+    weak var delegate: BatteryServiceDelegate?
+    private var updateTimer: Timer?
+    private var cancellables = Set<AnyCancellable>()
+    
+    // MARK: - Types
+    
+    struct BatteryInfo {
+        let level: Double
+        let isCharging: Bool
+        let timeRemaining: TimeInterval
+        let isPluggedIn: Bool
+        let temperature: Double?
+        let cycleCount: Int?
+        let maxCapacity: Int?
+        let currentCapacity: Int?
+        
+        init(
+            level: Double = 0.0,
+            isCharging: Bool = false,
+            timeRemaining: TimeInterval = 0,
+            isPluggedIn: Bool = false,
+            temperature: Double? = nil,
+            cycleCount: Int? = nil,
+            maxCapacity: Int? = nil,
+            currentCapacity: Int? = nil
+        ) {
+            self.level = level
+            self.isCharging = isCharging
+            self.timeRemaining = timeRemaining
+            self.isPluggedIn = isPluggedIn
+            self.temperature = temperature
+            self.cycleCount = cycleCount
+            self.maxCapacity = maxCapacity
+            self.currentCapacity = currentCapacity
+        }
+    }
+    
+    // MARK: - Initialization
+    
+    override init() {
+        super.init()
+        setupBatteryMonitoring()
+        startMonitoring()
+    }
+    
+    // MARK: - Public Methods
+    
+    func startMonitoring() {
+        updateTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                await self?.updateBatteryInfo()
+            }
+        }
+        
+        // Initial update
+        Task {
+            await updateBatteryInfo()
+        }
+    }
+    
+    func stopMonitoring() {
+        updateTimer?.invalidate()
+        updateTimer = nil
+    }
+    
+    func refreshBatteryInfo() {
+        Task {
+            await updateBatteryInfo()
+        }
+    }
+    
+    // MARK: - Private Methods
+    
+    private func setupBatteryMonitoring() {
+        // Setup power source change notifications
+        let runLoop = CFRunLoopGetCurrent()
+        let context = UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
+        
+        let callback: IOPowerSourceCallbackType = { context in
+            guard let context = context else { return }
+            let service = Unmanaged<BatteryService>.fromOpaque(context).takeUnretainedValue()
+            
+            Task { @MainActor in
+                await service.updateBatteryInfo()
+            }
+        }
+        
+        IORegisterForSystemPower(context, nil, callback, nil)
+    }
+    
+    private func updateBatteryInfo() async {
+        let info = await fetchBatteryInfo()
+        
+        await MainActor.run {
+            batteryInfo = info
+            isCharging = info.isCharging
+            batteryLevel = info.level
+            timeRemaining = info.timeRemaining
+            
+            delegate?.batteryService(self, didUpdateBatteryInfo: info)
+        }
+    }
+    
+    private func fetchBatteryInfo() async -> BatteryInfo {
+        return await withCheckedContinuation { continuation in
+            Task.detached {
+                // Get power source information using IOKit
+                let powerSources = IOPSCopyPowerSourcesInfo()?.takeRetainedValue()
+                let sourcesArray = IOPSCopyPowerSourcesList(powerSources)?.takeRetainedValue() as? [CFTypeRef]
+                
+                guard let sources = sourcesArray,
+                      let source = sources.first else {
+                    continuation.resume(returning: BatteryInfo())
+                    return
+                }
+                
+                let sourceInfo = IOPSGetPowerSourceDescription(powerSources, source)?.takeUnretainedValue()
+                guard let info = sourceInfo as? [String: Any] else {
+                    continuation.resume(returning: BatteryInfo())
+                    return
+                }
+                
+                let currentCapacity = info[kIOPSCurrentCapacityKey] as? Int ?? 0
+                let maxCapacity = info[kIOPSMaxCapacityKey] as? Int ?? 100
+                let isCharging = info[kIOPSIsChargingKey] as? Bool ?? false
+                let isPluggedIn = info[kIOPSPowerSourceStateKey] as? String == kIOPSACPowerValue
+                let timeToEmpty = info[kIOPSTimeToEmptyKey] as? Int ?? 0
+                let temperature = info["Temperature"] as? Double
+                let cycleCount = info["CycleCount"] as? Int
+                
+                let level = maxCapacity > 0 ? Double(currentCapacity) / Double(maxCapacity) : 0.0
+                let timeRemaining = timeToEmpty > 0 ? TimeInterval(timeToEmpty * 60) : 0
+                
+                let batteryInfo = BatteryInfo(
+                    level: level,
+                    isCharging: isCharging,
+                    timeRemaining: timeRemaining,
+                    isPluggedIn: isPluggedIn,
+                    temperature: temperature,
+                    cycleCount: cycleCount,
+                    maxCapacity: maxCapacity,
+                    currentCapacity: currentCapacity
+                )
+                
+                continuation.resume(returning: batteryInfo)
+            }
+        }
+    }
+    
+    deinit {
+        stopMonitoring()
+    }
+}

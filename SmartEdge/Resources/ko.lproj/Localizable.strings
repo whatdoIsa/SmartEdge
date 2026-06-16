@@ -1,0 +1,84 @@
+/*
+ * SmartEdge — Korean (한국어) localization
+ * See en.lproj/Localizable.strings for the source key list + rationale.
+ *
+ * Translation tone: friendly-formal (존댓말, but not stiff). Mirrors
+ * the design philosophy from CLAUDE.md (TOSS / Airbnb register).
+ */
+
+// MARK: - Permission Guide
+"Permissions Required" = "권한이 필요합니다";
+"SmartEdge needs the following permissions to work properly. Grant them in System Settings, then come back here." = "SmartEdge가 정상 동작하려면 아래 권한이 필요합니다. 시스템 설정에서 권한을 허용한 뒤 이 화면으로 돌아와주세요.";
+"Accessibility" = "손쉬운 사용";
+"Input Monitoring" = "입력 모니터링";
+"Calendar" = "캘린더";
+"Open Settings" = "설정 열기";
+"Continue" = "계속";
+"Granted." = "허용됨.";
+"Granted — upcoming events will surface in the notch." = "허용됨 — 다가오는 일정이 노치에 표시됩니다.";
+
+// MARK: - Settings Sidebar / Panels
+"General" = "일반";
+"Notch Display" = "노치 표시";
+"Music Player" = "음악 플레이어";
+"System HUD" = "시스템 HUD";
+"Shelf" = "선반";
+"System Status" = "시스템 상태";
+"Privacy" = "개인정보 보호";
+"Integrations" = "연동";
+
+// MARK: - System HUD Panel
+"Intercept system HUD" = "시스템 HUD 가로채기";
+"Volume controls" = "볼륨 키";
+"Brightness controls" = "밝기 키";
+"Keyboard backlight" = "키보드 백라이트";
+"Display Duration" = "표시 시간";
+"Accessibility Access" = "손쉬운 사용 권한";
+
+// MARK: - Calendar Panel
+"Show upcoming events" = "다가오는 일정 표시";
+"Include all-day events" = "종일 일정 포함";
+"Look-ahead Window" = "표시할 기간";
+"Refresh Interval" = "새로고침 주기";
+"Sync Now" = "지금 동기화";
+
+// MARK: - Shelf Context Menu
+"Open" = "열기";
+"Show in Finder" = "Finder에서 보기";
+"Quick Look" = "훑어보기";
+"Share" = "공유";
+"AirDrop" = "AirDrop";
+"Messages" = "메시지";
+"Copy" = "복사";
+"Remove from Shelf" = "선반에서 제거";
+
+// MARK: - Music Player
+"No Music Playing" = "재생 중인 음악이 없습니다";
+"Start playing music to see controls here" = "음악을 재생하면 여기에 컨트롤이 표시됩니다";
+"Open Music App" = "음악 앱 열기";
+"Unknown Track" = "알 수 없는 곡";
+"Unknown Artist" = "알 수 없는 아티스트";
+
+// MARK: - HUD Labels
+"Volume" = "볼륨";
+"Brightness" = "밝기";
+"Muted" = "음소거";
+
+// MARK: - Menu Bar
+"Settings…" = "설정…";
+"Permissions" = "권한";
+"Permissions…" = "권한…";
+"Show Notch" = "노치 표시";
+"Hide Notch" = "노치 숨기기";
+"Quit SmartEdge" = "SmartEdge 종료";
+"Clipboard History" = "클립보드 기록";
+"Clear History" = "기록 지우기";
+"No recent items" = "최근 항목 없음";
+"Focus Statistics…" = "집중 통계…";
+"Start Focus Timer" = "집중 타이머 시작";
+"Show Quick Actions" = "빠른 작업 표시";
+"Show Clipboard in Notch  ⇧⌘V" = "노치에 클립보드 표시  ⇧⌘V";
+
+// MARK: - Shelf View
+"Quick Shelf" = "빠른 선반";
+"Drop files here" = "여기에 파일을 놓으세요";

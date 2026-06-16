@@ -1,0 +1,256 @@
+import Foundation
+import CoreBluetooth
+import Combine
+
+protocol BluetoothServiceDelegate: AnyObject {
+    func bluetoothService(_ service: BluetoothService, didUpdateState state: CBManagerState)
+    func bluetoothService(_ service: BluetoothService, didDiscoverDevice device: BluetoothDevice)
+    func bluetoothService(_ service: BluetoothService, didConnectDevice device: BluetoothDevice)
+    func bluetoothService(_ service: BluetoothService, didDisconnectDevice device: BluetoothDevice)
+}
+
+@MainActor
+final class BluetoothService: NSObject, ObservableObject {
+    // MARK: - Published Properties
+    
+    @Published var bluetoothState: CBManagerState = .unknown
+    @Published var connectedDevices: [BluetoothDevice] = []
+    @Published var availableDevices: [BluetoothDevice] = []
+    @Published var isScanning: Bool = false
+    
+    // MARK: - Properties
+    
+    weak var delegate: BluetoothServiceDelegate?
+    private var centralManager: CBCentralManager?
+    private var discoveredPeripherals: [CBPeripheral] = []
+    private var cancellables = Set<AnyCancellable>()
+    
+    // MARK: - Types
+    
+    struct BluetoothDevice {
+        let id: UUID
+        let name: String
+        let rssi: NSNumber?
+        let isConnected: Bool
+        let deviceType: DeviceType
+        let batteryLevel: Double?
+        
+        enum DeviceType {
+            case headphones
+            case speaker
+            case mouse
+            case keyboard
+            case trackpad
+            case phone
+            case computer
+            case unknown
+            
+            var iconName: String {
+                switch self {
+                case .headphones: return "headphones"
+                case .speaker: return "speaker.2"
+                case .mouse: return "computermouse"
+                case .keyboard: return "keyboard"
+                case .trackpad: return "trackpad"
+                case .phone: return "iphone"
+                case .computer: return "macbook"
+                case .unknown: return "antenna.radiowaves.left.and.right"
+                }
+            }
+        }
+    }
+    
+    // MARK: - Initialization
+    
+    override init() {
+        super.init()
+        setupBluetoothManager()
+    }
+    
+    // MARK: - Public Methods
+    
+    func startScanning() {
+        guard bluetoothState == .poweredOn else { return }
+        
+        isScanning = true
+        centralManager?.scanForPeripherals(withServices: nil, options: [
+            CBCentralManagerScanOptionAllowDuplicatesKey: false
+        ])
+        
+        // Auto-stop scanning after 30 seconds
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 30_000_000_000) // 30 seconds
+            stopScanning()
+        }
+    }
+    
+    func stopScanning() {
+        centralManager?.stopScan()
+        isScanning = false
+    }
+    
+    func connect(to device: BluetoothDevice) {
+        guard let peripheral = discoveredPeripherals.first(where: { $0.identifier == device.id }) else {
+            return
+        }
+        
+        centralManager?.connect(peripheral, options: nil)
+    }
+    
+    func disconnect(from device: BluetoothDevice) {
+        guard let peripheral = discoveredPeripherals.first(where: { $0.identifier == device.id }) else {
+            return
+        }
+        
+        centralManager?.cancelPeripheralConnection(peripheral)
+    }
+    
+    func refreshConnectedDevices() {
+        Task {
+            await updateConnectedDevices()
+        }
+    }
+    
+    // MARK: - Private Methods
+    
+    private func setupBluetoothManager() {
+        centralManager = CBCentralManager(delegate: self, queue: DispatchQueue.main)
+    }
+    
+    private func updateConnectedDevices() async {
+        guard let manager = centralManager else { return }
+        
+        // Get connected peripherals for common service UUIDs
+        let connectedPeripherals = manager.retrieveConnectedPeripherals(withServices: [
+            CBUUID(string: "180F"), // Battery Service
+            CBUUID(string: "1812"), // Human Interface Device
+            CBUUID(string: "110B"), // Audio Sink
+        ])
+        
+        let devices = connectedPeripherals.map { peripheral in
+            BluetoothDevice(
+                id: peripheral.identifier,
+                name: peripheral.name ?? "Unknown Device",
+                rssi: nil,
+                isConnected: true,
+                deviceType: determineDeviceType(from: peripheral),
+                batteryLevel: nil // Would be retrieved from battery service
+            )
+        }
+        
+        await MainActor.run {
+            connectedDevices = devices
+        }
+    }
+    
+    private func determineDeviceType(from peripheral: CBPeripheral) -> BluetoothDevice.DeviceType {
+        guard let name = peripheral.name?.lowercased() else {
+            return .unknown
+        }
+        
+        if name.contains("airpods") || name.contains("headphone") || name.contains("beats") {
+            return .headphones
+        } else if name.contains("speaker") {
+            return .speaker
+        } else if name.contains("mouse") {
+            return .mouse
+        } else if name.contains("keyboard") {
+            return .keyboard
+        } else if name.contains("trackpad") {
+            return .trackpad
+        } else if name.contains("iphone") {
+            return .phone
+        } else if name.contains("mac") {
+            return .computer
+        } else {
+            return .unknown
+        }
+    }
+    
+    private func createBluetoothDevice(from peripheral: CBPeripheral, rssi: NSNumber) -> BluetoothDevice {
+        BluetoothDevice(
+            id: peripheral.identifier,
+            name: peripheral.name ?? "Unknown Device",
+            rssi: rssi,
+            isConnected: false,
+            deviceType: determineDeviceType(from: peripheral),
+            batteryLevel: nil
+        )
+    }
+    
+    deinit {
+        stopScanning()
+    }
+}
+
+// MARK: - CBCentralManagerDelegate
+
+extension BluetoothService: CBCentralManagerDelegate {
+    func centralManagerDidUpdateState(_ central: CBCentralManager) {
+        Task { @MainActor in
+            bluetoothState = central.state
+            delegate?.bluetoothService(self, didUpdateState: central.state)
+            
+            if central.state == .poweredOn {
+                await updateConnectedDevices()
+            }
+        }
+    }
+    
+    func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
+        Task { @MainActor in
+            // Avoid duplicates
+            if !discoveredPeripherals.contains(where: { $0.identifier == peripheral.identifier }) {
+                discoveredPeripherals.append(peripheral)
+                
+                let device = createBluetoothDevice(from: peripheral, rssi: RSSI)
+                availableDevices.append(device)
+                
+                delegate?.bluetoothService(self, didDiscoverDevice: device)
+            }
+        }
+    }
+    
+    func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
+        Task { @MainActor in
+            let device = createBluetoothDevice(from: peripheral, rssi: nil)
+            
+            // Move from available to connected
+            availableDevices.removeAll { $0.id == peripheral.identifier }
+            connectedDevices.append(BluetoothDevice(
+                id: device.id,
+                name: device.name,
+                rssi: device.rssi,
+                isConnected: true,
+                deviceType: device.deviceType,
+                batteryLevel: device.batteryLevel
+            ))
+            
+            delegate?.bluetoothService(self, didConnectDevice: device)
+        }
+    }
+    
+    func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
+        Task { @MainActor in
+            let device = createBluetoothDevice(from: peripheral, rssi: nil)
+            
+            // Move from connected back to available
+            connectedDevices.removeAll { $0.id == peripheral.identifier }
+            
+            // Only add back to available if we were scanning and it's not an error
+            if isScanning && error == nil {
+                availableDevices.append(device)
+            }
+            
+            delegate?.bluetoothService(self, didDisconnectDevice: device)
+        }
+    }
+    
+    func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
+        Task { @MainActor in
+            let device = createBluetoothDevice(from: peripheral, rssi: nil)
+            // Handle connection failure - could show user notification
+            print("Failed to connect to \(device.name): \(error?.localizedDescription ?? "Unknown error")")
+        }
+    }
+}

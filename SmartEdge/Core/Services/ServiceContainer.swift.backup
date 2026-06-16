@@ -1,0 +1,101 @@
+import Foundation
+
+@MainActor
+final class ServiceContainer: ObservableObject {
+    
+    // MARK: - Shared Instance
+    static let shared = ServiceContainer()
+    
+    // MARK: - Services (lazily initialized)
+    lazy var settingsService: SettingsServiceProtocol = SettingsService()
+    lazy var mediaService: MediaServiceProtocol = MediaService()
+    lazy var systemService: SystemServiceProtocol = SystemService()
+    lazy var systemHUDService: SystemHUDServiceProtocol = SystemHUDService()
+    lazy var notchWindowManager: NotchWindowManagerProtocol = NotchWindowManager()
+    lazy var calendarService: CalendarServiceProtocol = CalendarService()
+    lazy var eventNotificationService: EventNotificationService = EventNotificationService()
+    
+    // MARK: - System Monitoring Services
+    lazy var batteryService: BatteryServiceProtocol = BatteryService()
+    lazy var bluetoothService: BluetoothServiceProtocol = BluetoothService()
+    
+    // MARK: - Shelf Services
+    lazy var clipboardMonitorService: ClipboardMonitorServiceProtocol = ClipboardMonitorService()
+    lazy var fileSharingService: FileSharingServiceProtocol = FileSharingService()
+    lazy var shelfService: ShelfServiceProtocol = ShelfService(
+        clipboardMonitor: clipboardMonitorService,
+        fileSharingService: fileSharingService
+    )
+    
+    // MARK: - Initialization
+    private init() {
+        setupServices()
+    }
+    
+    private func setupServices() {
+        // Start system monitoring services
+        Task {
+            await batteryService.startMonitoring()
+            await bluetoothService.refreshConnectedDevices()
+        }
+        
+        // Any cross-service dependencies can be set up here
+        // For example: systemService.delegate = someHandler
+    }
+    
+    // MARK: - Service Access Methods
+    func createMusicPlayerViewModel() -> MusicPlayerViewModel {
+        return MusicPlayerViewModel(mediaService: mediaService)
+    }
+    
+    func createNotchViewModel(coordinator: AppCoordinatorProtocol) -> NotchViewModel {
+        return NotchViewModel(
+            coordinator: coordinator,
+            windowManager: notchWindowManager,
+            settingsService: settingsService
+        )
+    }
+    
+    func createHUDViewModel() -> HUDViewModel {
+        return HUDViewModel(
+            systemService: systemService, 
+            systemHUDService: systemHUDService
+        )
+    }
+    
+    func createCalendarViewModel() -> CalendarViewModel {
+        return CalendarViewModel(
+            calendarService: calendarService,
+            quickActions: CalendarQuickActions(calendarService: calendarService),
+            notificationService: eventNotificationService
+        )
+    }
+    
+    func createShelfViewModel() -> ShelfViewModel {
+        return ShelfViewModel(shelfService: shelfService)
+    }
+    
+    func createSystemStatusViewModel() -> SystemStatusViewModel {
+        return SystemStatusViewModel(
+            batteryService: batteryService,
+            bluetoothService: bluetoothService
+        )
+    }
+    
+    // MARK: - Service Lifecycle Management
+    
+    func startSystemMonitoring() async {
+        await batteryService.startMonitoring()
+        await bluetoothService.refreshConnectedDevices()
+    }
+    
+    func stopSystemMonitoring() async {
+        await batteryService.stopMonitoring()
+        await bluetoothService.stopScanning()
+    }
+    
+    func refreshSystemStatus() async {
+        await batteryService.refreshBatteryInfo()
+        await bluetoothService.refreshConnectedDevices()
+    }
+}

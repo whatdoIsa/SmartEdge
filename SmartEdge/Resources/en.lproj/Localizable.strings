@@ -1,0 +1,92 @@
+/*
+ * SmartEdge — English (base) localization
+ *
+ * Format: "key" = "value";
+ *
+ * SwiftUI Text("Foo") looks up "Foo" in this file at runtime and falls
+ * back to the literal if the key is missing. We keep the English string
+ * as both the key AND the value for the base locale so adding a new
+ * Korean translation only requires editing ko.lproj/Localizable.strings.
+ *
+ * Why explicit strings file: this app is going to ship to Korean
+ * speakers as the primary audience; relying on Xcode-extracted
+ * .xcstrings would tie localization to Xcode 15+ which works against
+ * the macOS 13 deployment target.
+ */
+
+// MARK: - Permission Guide
+"Permissions Required" = "Permissions Required";
+"SmartEdge needs the following permissions to work properly. Grant them in System Settings, then come back here." = "SmartEdge needs the following permissions to work properly. Grant them in System Settings, then come back here.";
+"Accessibility" = "Accessibility";
+"Input Monitoring" = "Input Monitoring";
+"Calendar" = "Calendar";
+"Open Settings" = "Open Settings";
+"Continue" = "Continue";
+"Granted." = "Granted.";
+"Granted — upcoming events will surface in the notch." = "Granted — upcoming events will surface in the notch.";
+
+// MARK: - Settings Sidebar / Panels
+"General" = "General";
+"Notch Display" = "Notch Display";
+"Music Player" = "Music Player";
+"System HUD" = "System HUD";
+"Shelf" = "Shelf";
+"System Status" = "System Status";
+"Privacy" = "Privacy";
+"Integrations" = "Integrations";
+
+// MARK: - System HUD Panel
+"Intercept system HUD" = "Intercept system HUD";
+"Volume controls" = "Volume controls";
+"Brightness controls" = "Brightness controls";
+"Keyboard backlight" = "Keyboard backlight";
+"Display Duration" = "Display Duration";
+"Accessibility Access" = "Accessibility Access";
+
+// MARK: - Calendar Panel
+"Show upcoming events" = "Show upcoming events";
+"Include all-day events" = "Include all-day events";
+"Look-ahead Window" = "Look-ahead Window";
+"Refresh Interval" = "Refresh Interval";
+"Sync Now" = "Sync Now";
+
+// MARK: - Shelf Context Menu
+"Open" = "Open";
+"Show in Finder" = "Show in Finder";
+"Quick Look" = "Quick Look";
+"Share" = "Share";
+"AirDrop" = "AirDrop";
+"Messages" = "Messages";
+"Copy" = "Copy";
+"Remove from Shelf" = "Remove from Shelf";
+
+// MARK: - Music Player
+"No Music Playing" = "No Music Playing";
+"Start playing music to see controls here" = "Start playing music to see controls here";
+"Open Music App" = "Open Music App";
+"Unknown Track" = "Unknown Track";
+"Unknown Artist" = "Unknown Artist";
+
+// MARK: - HUD Labels
+"Volume" = "Volume";
+"Brightness" = "Brightness";
+"Muted" = "Muted";
+
+// MARK: - Menu Bar
+"Settings…" = "Settings…";
+"Permissions" = "Permissions";
+"Permissions…" = "Permissions…";
+"Show Notch" = "Show Notch";
+"Hide Notch" = "Hide Notch";
+"Quit SmartEdge" = "Quit SmartEdge";
+"Clipboard History" = "Clipboard History";
+"Clear History" = "Clear History";
+"No recent items" = "No recent items";
+"Focus Statistics…" = "Focus Statistics…";
+"Start Focus Timer" = "Start Focus Timer";
+"Show Quick Actions" = "Show Quick Actions";
+"Show Clipboard in Notch  ⇧⌘V" = "Show Clipboard in Notch  ⇧⌘V";
+
+// MARK: - Shelf View
+"Quick Shelf" = "Quick Shelf";
+"Drop files here" = "Drop files here";

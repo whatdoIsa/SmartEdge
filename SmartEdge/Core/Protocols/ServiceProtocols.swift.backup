@@ -1,0 +1,95 @@
+//
+//  ServiceProtocols.swift
+//  SmartEdge
+//
+
+import Foundation
+
+// This file serves as an index for all service protocols
+// Individual protocols are defined in separate files for better organization
+
+// MARK: - Core Service Protocols
+
+// NotchWindowManagerProtocol - defined in NotchWindowProtocol.swift
+// MediaServiceProtocol - defined in MediaServiceProtocol.swift
+// SettingsServiceProtocol - defined in SettingsServiceProtocol.swift (to be created)
+// SystemServiceProtocol - defined in SystemServiceProtocol.swift (to be created)
+// SystemHUDServiceProtocol - defined in SystemHUDServiceProtocol.swift (to be created)
+
+// MARK: - Shelf Service Protocols
+
+// ShelfServiceProtocol - defined in ShelfServiceProtocol.swift
+// ClipboardMonitorServiceProtocol - defined in ShelfServiceProtocol.swift
+// FileSharingServiceProtocol - defined in ShelfServiceProtocol.swift
+
+// MARK: - Mock Services (for testing and development)
+
+// These will be replaced with actual implementations as services are developed
+
+class MockShelfService: ShelfServiceProtocol {
+    @Published private var items: [ShelfItem] = []
+    
+    nonisolated var shelfItemsPublisher: Published<[ShelfItem]>.Publisher {
+        $items
+    }
+    
+    func getAllItems() async throws -> [ShelfItem] { return [] }
+    func addItem(_ item: ShelfItem) async throws { }
+    func removeItem(_ itemId: UUID) async throws { }
+    func clearAllItems() async throws { }
+    func createShelfItem(from url: URL) async throws -> ShelfItem {
+        return ShelfItem.from(fileURL: url)
+    }
+    func createShelfItem(from clipboardItem: ClipboardItem) async throws -> ShelfItem {
+        throw ShelfError.invalidDropItem
+    }
+    func openItem(_ item: ShelfItem) async throws { }
+    func showInFinder(_ item: ShelfItem) async throws { }
+    func quickLookItem(_ item: ShelfItem) async throws { }
+    func shareItem(_ item: ShelfItem, using serviceType: NSSharingService.Name?) async throws { }
+    func acceptsDroppedFiles(_ urls: [URL]) -> Bool { return true }
+    func processDroppedFiles(_ urls: [URL]) async throws -> [ShelfItem] { return [] }
+    func getStorageUsage() async throws -> ShelfStorageInfo {
+        return ShelfStorageInfo(totalSizeBytes: 0, itemCount: 0, oldestItemDate: nil, maxSizeBytes: 0, isNearLimit: false)
+    }
+    func cleanupExpiredItems() async throws { }
+}
+
+class MockCalendarService: CalendarServiceProtocol {
+    // Mock implementation - to be replaced when CalendarService is implemented
+    func getCurrentEvents() async throws -> [CalendarEvent] { return [] }
+    func getUpcomingEvents(limit: Int) async throws -> [CalendarEvent] { return [] }
+    func startMonitoring() async throws { }
+    func stopMonitoring() async { }
+}
+
+// MARK: - Protocol Requirements
+
+// These protocols need to be defined in their respective files:
+
+protocol SettingsServiceProtocol {
+    // To be defined when SettingsService is implemented
+}
+
+protocol SystemServiceProtocol {
+    // To be defined when SystemService is implemented  
+}
+
+protocol SystemHUDServiceProtocol {
+    // To be defined when SystemHUDService is implemented
+}
+
+protocol CalendarServiceProtocol {
+    func getCurrentEvents() async throws -> [CalendarEvent]
+    func getUpcomingEvents(limit: Int) async throws -> [CalendarEvent]
+    func startMonitoring() async throws
+    func stopMonitoring() async
+}
+
+struct CalendarEvent {
+    let id: String
+    let title: String
+    let startDate: Date
+    let endDate: Date
+    let isAllDay: Bool
+}
