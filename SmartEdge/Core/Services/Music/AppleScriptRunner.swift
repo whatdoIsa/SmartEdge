@@ -1,4 +1,5 @@
 import Foundation
+import Carbon
 
 /// In-process AppleScript execution on a dedicated serial background queue.
 ///
@@ -83,6 +84,55 @@ final class AppleScriptRunner: @unchecked Sendable {
         queue.async {
             var errorInfo: NSDictionary?
             NSAppleScript(source: source)?.executeAndReturnError(&errorInfo)
+        }
+    }
+
+    enum AutomationPermission {
+        case granted
+        case denied
+        case notPossible  // target app missing / unexpected error
+    }
+
+    /// Explicitly request (and prompt for) Automation permission to control
+    /// `bundleID`.
+    ///
+    /// Why this is necessary: `NSAppleScript.executeAndReturnError` sends the
+    /// Apple Event with the equivalent of `askUserIfNeeded = false` — when
+    /// the TCC Automation status is undetermined, the sandbox denies the
+    /// send outright (`kernel: deny appleevent-send`) and **no prompt
+    /// appears**. The app then never shows up in System Settings → Privacy &
+    /// Security → Automation, so the user can't grant it manually either.
+    ///
+    /// `AEDeterminePermissionToAutomateTarget(..., askUserIfNeeded: true)` is
+    /// the Apple-sanctioned API that actually surfaces the prompt and
+    /// registers the app in the Automation list. Runs on our serial queue
+    /// because it blocks until the user answers — must not be the main thread.
+    func requestAutomationPermission(bundleID: String) async -> AutomationPermission {
+        await withCheckedContinuation { continuation in
+            queue.async {
+                var target = AEAddressDesc()
+                let idData = Array(bundleID.utf8)
+                let createStatus = idData.withUnsafeBytes { raw in
+                    AECreateDesc(typeApplicationBundleID, raw.baseAddress, raw.count, &target)
+                }
+                guard createStatus == noErr else {
+                    continuation.resume(returning: .notPossible)
+                    return
+                }
+                defer { AEDisposeDesc(&target) }
+
+                let status = AEDeterminePermissionToAutomateTarget(
+                    &target, typeWildCard, typeWildCard, true
+                )
+                switch status {
+                case noErr:
+                    continuation.resume(returning: .granted)
+                case OSStatus(errAEEventNotPermitted):
+                    continuation.resume(returning: .denied)
+                default:
+                    continuation.resume(returning: .notPossible)
+                }
+            }
         }
     }
 }

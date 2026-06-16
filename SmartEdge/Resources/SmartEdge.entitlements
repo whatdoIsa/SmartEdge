@@ -2,37 +2,39 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <!-- Disable App Sandbox for system-level access -->
+    <!-- App Sandbox — REQUIRED for Mac App Store. -->
     <key>com.apple.security.app-sandbox</key>
-    <false/>
-    
-    <!-- Allow Apple Events for media control -->
+    <true/>
+
+    <!-- Send Apple Events so we can drive Apple Music / Spotify via
+         AppleScript (now-playing + transport controls). macOS prompts the
+         user for Automation permission per target app on first send;
+         NSAppleEventsUsageDescription (Info.plist) supplies the prompt text.
+         This is the App-Store-sanctioned replacement for the old
+         MediaRemote/perl path. -->
     <key>com.apple.security.automation.apple-events</key>
     <true/>
-    
-    <!-- Allow calendar access -->
+
+    <!-- Read the user's calendar to surface upcoming events in the notch. -->
     <key>com.apple.security.personal-information.calendars</key>
     <true/>
-    
-    <!-- Allow Bluetooth access -->
+
+    <!-- CoreBluetooth — connected-device status in the notch. -->
     <key>com.apple.security.device.bluetooth</key>
     <true/>
-    
-    <!-- Allow file system access -->
+
+    <!-- User-initiated file access: drag-and-drop onto the Shelf. The Shelf
+         copies dropped files into the app's own sandbox container, which
+         needs no extra entitlement. -->
     <key>com.apple.security.files.user-selected.read-only</key>
     <true/>
-    
-    <!-- Allow network access -->
+
+    <!-- Network: download Spotify album artwork + outbound webhooks. -->
     <key>com.apple.security.network.client</key>
     <true/>
 
-    <!-- Allow the bundled mediaremote-adapter helper to load its framework.
-         /usr/bin/perl inherits the parent's hardening when spawned as a
-         child; without this key the perl child silently fails to dlopen
-         MediaRemoteAdapter.framework because its code signature doesn't
-         match SmartEdge's. The helper output never reaches stdout, so
-         the notch sees no playback data. -->
-    <key>com.apple.security.cs.disable-library-validation</key>
-    <true/>
+    <!-- NOTE: com.apple.security.cs.disable-library-validation was removed.
+         It existed only for the perl/MediaRemote helper (now deleted) and is
+         not permitted in Mac App Store builds. -->
 </dict>
 </plist>
