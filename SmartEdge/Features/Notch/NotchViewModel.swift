@@ -9,6 +9,17 @@ final class NotchViewModel: ObservableObject {
     @Published private(set) var currentContent: NotchContent = .collapsed
     @Published private(set) var isVisible = true
 
+    // Persistent status data for the always-on top strip of the expanded
+    // notch. Unlike the old `.systemStatus` content (which swapped the
+    // whole notch to a battery-only view), these stay continuously fresh so
+    // the status bar can render above whatever content is in the middle
+    // (music, etc.). Updated on every battery/bluetooth publisher tick.
+    @Published private(set) var statusBattery: BatteryInfo?
+    @Published private(set) var statusBluetooth: BluetoothInfo?
+    /// Short clock string (e.g. "3:14") for the status bar's left side.
+    /// Refreshed once a minute.
+    @Published private(set) var clockText: String = ""
+
     /// Accent color for the notch border/shadow, mirrored from a connected
     /// pomodoro view model. nil means "use the default subtle styling".
     /// Set up via `bindPomodoroTheme(_:)` from the AppCoordinator so the view
@@ -50,7 +61,27 @@ final class NotchViewModel: ObservableObject {
         setupServiceObservers()
         loadAndObservePulseSettings()
         loadAndObserveCalendarSettings()
+        startClock()
     }
+
+    /// Drives `clockText`. Fires every 30s (cheap) so the minute rollover is
+    /// never more than ~30s stale; the status bar only shows hour:minute so
+    /// sub-minute precision isn't needed.
+    private func startClock() {
+        updateClock()
+        clockTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in self?.updateClock() }
+        }
+    }
+
+    private func updateClock() {
+        let f = DateFormatter()
+        f.locale = Locale.current
+        f.setLocalizedDateFormatFromTemplate("j:mm")
+        clockText = f.string(from: Date())
+    }
+
+    private var clockTimer: Timer?
 
     /// Mirrors the pomodoro view model's themeAccent into this VM so the
     /// notch view can observe a single source of truth.
@@ -67,6 +98,7 @@ final class NotchViewModel: ObservableObject {
 
     deinit {
         contentTimer?.invalidate()
+        clockTimer?.invalidate()
         cancellables.removeAll()
     }
     
@@ -600,8 +632,13 @@ final class NotchViewModel: ObservableObject {
         let threshold = thresholdPct > 0 ? thresholdPct / 100.0 : 0.20
 
         // Master toggle: keep monitoring (for menu bar / settings display)
-        // but suppress the notch pop-up if the user doesn't want it.
+        // but suppress the notch top-bar battery item if the user opts out.
         let showBattery = UserDefaults.standard.object(forKey: SettingsKeys.showBatteryStatus) as? Bool ?? true
+
+        // Always refresh the persistent top-bar data (when enabled) so the
+        // status strip stays live regardless of what's in the notch middle.
+        statusBattery = showBattery ? batteryInfo : nil
+
         guard showBattery else {
             previousBatteryInfo = batteryInfo
             return
@@ -612,27 +649,52 @@ final class NotchViewModel: ObservableObject {
         let chargingStateFlipped = batteryInfo.isCharging != previousBatteryInfo?.isCharging
             && previousBatteryInfo != nil  // suppress on first emission
 
+        // Low battery / charging change briefly expands the notch so the
+        // top status bar becomes visible (the bar renders over whatever's
+        // already in the middle, or nothing if idle).
         if crossedLowThreshold || chargingStateFlipped {
-            showSystemStatus()
+            pulseStatusBar()
         }
         previousBatteryInfo = batteryInfo
     }
 
     private func handleBluetoothUpdate(_ devices: [BluetoothDevice]) {
         let showBluetooth = UserDefaults.standard.object(forKey: SettingsKeys.showBluetoothStatus) as? Bool ?? true
+
+        // Always refresh persistent top-bar data.
+        statusBluetooth = showBluetooth
+            ? BluetoothInfo(
+                connectedDevices: devices.map(\.name),
+                isEnabled: bluetoothService.isBluetoothAvailable,
+                activeConnections: devices.count
+              )
+            : nil
+
         guard showBluetooth else {
             previousBluetoothDeviceCount = devices.count
             return
         }
-        // Connect/disconnect both surface a status pulse; the count delta
-        // is sufficient because BluetoothService re-emits the full
-        // connected list on every change. Suppress the first-emission
-        // false-positive by gating on `previousBluetoothDeviceCount != -1`,
-        // which we never initialize to a real count.
         if previousBluetoothDeviceCount >= 0 && devices.count != previousBluetoothDeviceCount {
-            showSystemStatus()
+            pulseStatusBar()
         }
         previousBluetoothDeviceCount = devices.count
+    }
+
+    /// Briefly expands the notch so the persistent top status bar is seen,
+    /// without swapping the middle content. If music is showing, it stays;
+    /// if the notch was collapsed, the middle is empty and only the bar
+    /// shows. Auto-collapses after the standard system-status delay unless
+    /// the user is hovering.
+    private func pulseStatusBar() {
+        guard !isHoverExpanded else { return }   // don't fight an active hover
+        isExpanded = true
+        contentTimer?.invalidate()
+        contentTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: false) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self = self, !self.isHoverExpanded else { return }
+                self.isExpanded = false
+            }
+        }
     }
     
     // MARK: - Content Management
@@ -683,28 +745,11 @@ final class NotchViewModel: ObservableObject {
         }
     }
     
-    private func showSystemStatus() {
-        let batteryInfo = BatteryInfo(
-            level: batteryService.batteryLevel,
-            isCharging: batteryService.isCharging,
-            isPluggedIn: batteryService.isPluggedIn,
-            timeRemaining: batteryService.timeRemaining
-        )
-        
-        let bluetoothInfo = BluetoothInfo(
-            connectedDevices: bluetoothService.connectedDevices.map(\.name),
-            isEnabled: bluetoothService.isBluetoothAvailable,
-            activeConnections: bluetoothService.connectedDevices.count
-        )
-        
-        let content = NotchContent.systemStatus(
-            battery: batteryInfo,
-            bluetooth: bluetoothInfo
-        )
-        
-        requestContent(content, source: .service)
-    }
-    
+    // `showSystemStatus()` (which swapped the whole notch to a battery-only
+    // content) was removed — system status now lives in the persistent
+    // `NotchStatusBar` at the top of the expanded notch, and low-battery /
+    // bluetooth events call `pulseStatusBar()` to briefly reveal it.
+
     private func scheduleContentHide(after delay: TimeInterval) {
         contentTimer?.invalidate()
         contentTimer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in

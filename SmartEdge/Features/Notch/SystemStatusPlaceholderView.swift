@@ -1,5 +1,39 @@
 import SwiftUI
 
+/// Slim, always-on status strip for the top of the expanded notch.
+/// Time on the left, battery + bluetooth on the right. Renders above the
+/// main notch content (music, etc.) so system info is persistently visible
+/// rather than swapping the whole notch to a status-only view.
+@MainActor
+struct NotchStatusBar: View {
+    let clock: String
+    let battery: BatteryInfo?
+    let bluetooth: BluetoothInfo?
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Text(clock)
+                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .foregroundColor(.primary)
+                .monospacedDigit()
+
+            Spacer(minLength: 8)
+
+            if let battery = battery {
+                BatteryStatusBadge(battery: battery)
+            }
+            if let bluetooth = bluetooth {
+                BluetoothStatusBadge(bluetooth: bluetooth)
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 4)
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("System status")
+    }
+}
+
 @MainActor
 struct NotchSystemStatusView: View {
     let battery: BatteryInfo?

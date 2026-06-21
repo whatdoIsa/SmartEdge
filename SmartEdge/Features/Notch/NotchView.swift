@@ -130,7 +130,7 @@ struct NotchView: View {
                     // already fits inside the notch silhouette, so no offset
                     // is needed (and adding one would push content below the
                     // visible window).
-                    contentView
+                    expandedLayout
                         .padding(.top, viewModel.isExpanded ? hardwareNotchInset : 0)
                         // Force dark-on-black readability for every child view.
                         // The notch background is hard-coded `Color.black` (to
@@ -246,6 +246,28 @@ struct NotchView: View {
             .shadow(color: shadowColor, radius: shadowRadius, x: 0, y: 4)
     }
     
+    /// Composite expanded layout: a persistent system-status strip pinned to
+    /// the top, with the main content (music, calendar, etc.) below it. When
+    /// collapsed, neither shows (the pillow hides behind the hardware notch).
+    /// This is what gives the user "system info always on top, music in the
+    /// middle" instead of the old one-thing-at-a-time swap.
+    @ViewBuilder
+    private var expandedLayout: some View {
+        if viewModel.isExpanded {
+            VStack(spacing: 0) {
+                NotchStatusBar(
+                    clock: viewModel.clockText,
+                    battery: viewModel.statusBattery,
+                    bluetooth: viewModel.statusBluetooth
+                )
+                contentView
+                Spacer(minLength: 0)
+            }
+        } else {
+            contentView
+        }
+    }
+
     @ViewBuilder
     private var contentView: some View {
         switch viewModel.currentContent {
@@ -281,9 +303,13 @@ struct NotchView: View {
                     ))
             }
 
-        case .systemStatus(let battery, let bluetooth):
-            NotchSystemStatusView(battery: battery, bluetooth: bluetooth)
-                .transition(.opacity)
+        case .systemStatus:
+            // System status now lives in the persistent top bar
+            // (`NotchStatusBar`) above this content, so the standalone
+            // middle view would just duplicate it. Render nothing here —
+            // the top bar carries battery/bluetooth, and a low-battery
+            // pulse simply expands the notch to reveal that bar.
+            EmptyView()
 
         case .notification(let title, let body, let icon):
             NotificationContentView(title: title, message: body, icon: icon)
