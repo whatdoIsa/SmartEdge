@@ -538,6 +538,12 @@ final class NotchWindowManager: NSObject, NotchWindowManagerProtocol {
         window.setContentSize(initialFrame.size)
         window.center()
         window.isReleasedWhenClosed = false
+        // Force an opaque window. Without this, NavigationSplitView's
+        // vibrant sidebar samples whatever is *behind* the window (desktop,
+        // other apps, the notch player bar) and bleeds it through — which
+        // read as the settings screen "overlapping" other windows.
+        window.isOpaque = true
+        window.backgroundColor = NSColor.windowBackgroundColor
 
         self.settingsWindow = window
     }

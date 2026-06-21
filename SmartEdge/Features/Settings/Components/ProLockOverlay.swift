@@ -15,15 +15,16 @@ struct ProLockGate<Content: View>: View {
         if store.isPro {
             content()
         } else {
-            ZStack {
-                content()
-                    .disabled(true)
-                    .blur(radius: 3)
-                    .opacity(0.4)
-                    .accessibilityHidden(true)
-
-                unlockCard
-            }
+            // Locked: show ONLY the centered unlock card filling the detail
+            // area. We deliberately do NOT render the real (blurred) panel
+            // behind it — layering the live panel under the card read as a
+            // broken, overlapping screen. A clean centered card is clearer.
+            unlockCard
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                // Opaque fill behind the card so nothing (panel content,
+                // window-behind, desktop) can bleed through and read as an
+                // overlapping screen.
+                .background(Color(NSColor.windowBackgroundColor))
         }
     }
 
@@ -56,11 +57,12 @@ struct ProLockGate<Content: View>: View {
         }
         .padding(28)
         .frame(maxWidth: 340)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+        // Solid (non-material) card so it never shows blurred content behind.
+        .background(Color(NSColor.controlBackgroundColor), in: RoundedRectangle(cornerRadius: 16))
         .overlay(
             RoundedRectangle(cornerRadius: 16)
                 .strokeBorder(.quaternary, lineWidth: 0.5)
         )
-        .shadow(color: .black.opacity(0.15), radius: 20, y: 8)
+        .shadow(color: .black.opacity(0.12), radius: 16, y: 6)
     }
 }
