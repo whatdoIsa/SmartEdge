@@ -1,5 +1,4 @@
 import Foundation
-import Carbon
 
 /// In-process AppleScript execution on a dedicated serial background queue.
 ///
@@ -54,6 +53,41 @@ final class AppleScriptRunner: @unchecked Sendable {
         }
     }
 
+    /// Result of a script run that needs to distinguish a permission denial
+    /// from "no value" — the queries use this to drive the authorization
+    /// state machine. `errorCode` is the AppleScript/Apple-Event error number
+    /// (nil on success); -1743 means Automation isn't authorized.
+    struct ScriptResult {
+        let value: String?
+        let errorCode: Int?
+    }
+
+    /// Like `runString`, but surfaces the error code so the caller can tell a
+    /// permission denial (-1743) apart from a transient failure. Sending this
+    /// real Apple Event is also what triggers the macOS Automation prompt on
+    /// the first send while the grant is undetermined (the app has the
+    /// `automation.apple-events` entitlement + usage string, so the send is
+    /// prompted rather than silently denied).
+    func runWithStatus(_ source: String) async -> ScriptResult {
+        await withCheckedContinuation { continuation in
+            queue.async {
+                var errorInfo: NSDictionary?
+                guard let script = NSAppleScript(source: source) else {
+                    continuation.resume(returning: ScriptResult(value: nil, errorCode: nil))
+                    return
+                }
+                let descriptor = script.executeAndReturnError(&errorInfo)
+                if let errorInfo {
+                    let code = (errorInfo[NSAppleScript.errorNumber] as? Int) ?? 0
+                    AppLogger.media.debug("AppleScript error \(code, privacy: .public)")
+                    continuation.resume(returning: ScriptResult(value: nil, errorCode: code))
+                    return
+                }
+                continuation.resume(returning: ScriptResult(value: descriptor.stringValue, errorCode: nil))
+            }
+        }
+    }
+
     /// Run `source` and return the raw bytes of its result descriptor.
     /// Used for Apple Music artwork (`data of artwork 1 of current track`),
     /// which comes back as a binary descriptor, not a string.
@@ -87,61 +121,4 @@ final class AppleScriptRunner: @unchecked Sendable {
         }
     }
 
-    enum AutomationPermission {
-        case granted
-        case denied
-        case notDetermined  // no decision yet — a prompt would be shown
-        case notPossible    // target app missing / unexpected error
-    }
-
-    /// Query (and optionally prompt for) Automation permission to control
-    /// `bundleID`.
-    ///
-    /// Why `AEDeterminePermissionToAutomateTarget` rather than just sending a
-    /// script: `NSAppleScript.executeAndReturnError` sends the Apple Event
-    /// with the equivalent of `askUserIfNeeded = false` — when the TCC
-    /// Automation status is undetermined, the sandbox denies the send
-    /// outright (`kernel: deny appleevent-send`) and **no prompt appears**.
-    /// The app then never shows up in System Settings → Privacy & Security →
-    /// Automation, so the user can't grant it manually either.
-    /// `AEDeterminePermissionToAutomateTarget` is the Apple-sanctioned API
-    /// that surfaces the prompt and registers the app in the Automation list.
-    ///
-    /// - Parameter prompt: when `true`, passes `askUserIfNeeded = true` so the
-    ///   system prompt is shown for an undetermined target (this blocks the
-    ///   serial queue until the user answers — never the main thread). When
-    ///   `false`, the call returns the current status without showing UI, so
-    ///   the background poll can read state cheaply and never stall.
-    func automationPermission(bundleID: String, prompt: Bool) async -> AutomationPermission {
-        await withCheckedContinuation { continuation in
-            queue.async {
-                var target = AEAddressDesc()
-                let idData = Array(bundleID.utf8)
-                let createStatus = idData.withUnsafeBytes { raw in
-                    AECreateDesc(typeApplicationBundleID, raw.baseAddress, raw.count, &target)
-                }
-                guard createStatus == noErr else {
-                    continuation.resume(returning: .notPossible)
-                    return
-                }
-                defer { AEDisposeDesc(&target) }
-
-                let status = AEDeterminePermissionToAutomateTarget(
-                    &target, typeWildCard, typeWildCard, prompt
-                )
-                switch status {
-                case noErr:
-                    continuation.resume(returning: .granted)
-                case OSStatus(errAEEventNotPermitted):
-                    continuation.resume(returning: .denied)
-                // -1744: consent required but askUserIfNeeded was false, i.e.
-                // the user hasn't decided yet and we chose not to prompt.
-                case -1744:
-                    continuation.resume(returning: .notDetermined)
-                default:
-                    continuation.resume(returning: .notPossible)
-                }
-            }
-        }
-    }
 }

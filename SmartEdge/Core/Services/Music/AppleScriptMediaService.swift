@@ -50,13 +50,6 @@ final class AppleScriptMediaService: ObservableObject, MediaServiceProtocol {
 
     private let runner = AppleScriptRunner()
     private var pollTimer: Timer?
-    /// Bundle IDs we've confirmed Automation permission for.
-    private var automationGranted: Set<String> = []
-    /// We auto-show the system prompt at most once per session (for
-    /// discoverability on first run); after that the user re-triggers it
-    /// from the in-app "grant access" button so we never nag in the
-    /// background.
-    private var didAutoPrompt = false
     /// (title|artist|album) of the track we last fetched artwork for, so we
     /// don't re-download / re-read the image on every 1.5s poll.
     private var lastArtworkKey: String?
@@ -94,6 +87,20 @@ final class AppleScriptMediaService: ObservableObject, MediaServiceProtocol {
 
     // MARK: - Polling
 
+    /// Outcome of probing one player. We attempt a real Now-Playing query and
+    /// read the result: success (with or without a loaded track) means
+    /// Automation is granted; an error -1743 means it isn't. Sending that
+    /// real Apple Event is also what surfaces the macOS Automation prompt on
+    /// first attempt — no separate `AEDeterminePermissionToAutomateTarget`
+    /// dance, which (under this sandbox config) failed to register the app in
+    /// the Automation list at all.
+    private enum QueryOutcome {
+        case track(Snapshot)
+        case authorizedNoTrack
+        case needsPermission
+        case unavailable
+    }
+
     private func poll() async {
         let running = Set(NSWorkspace.shared.runningApplications.compactMap { $0.bundleIdentifier })
         let musicRunning = running.contains(appleMusicBundleID)
@@ -106,30 +113,39 @@ final class AppleScriptMediaService: ObservableObject, MediaServiceProtocol {
             return
         }
 
-        // Non-blocking status check — never shows UI, so the poll can't stall.
-        await refreshAuthorization(musicRunning: musicRunning, spotifyRunning: spotifyRunning)
+        // Probe each running player by actually querying it. The first query
+        // while permission is undetermined triggers the system prompt.
+        var anyAuthorized = false
+        var anyNeedsPermission = false
+        var musicSnap: Snapshot?
+        var spotifySnap: Snapshot?
 
-        if authorization != .authorized {
-            // First run with a player open: surface the system prompt once so
-            // the permission is discoverable without the user hunting for it.
-            // After that, the in-app "grant access" button is the path.
-            if authorization == .needsPermission && !didAutoPrompt {
-                await promptForRunningPlayers(activate: false)
-                return
+        if musicRunning {
+            switch await queryAppleMusic() {
+            case .track(let s): anyAuthorized = true; musicSnap = s
+            case .authorizedNoTrack: anyAuthorized = true
+            case .needsPermission: anyNeedsPermission = true
+            case .unavailable: break
             }
-            activeSource = nil
-            apply(nil)
-            return
+        }
+        if spotifyRunning {
+            switch await querySpotify() {
+            case .track(let s): anyAuthorized = true; spotifySnap = s
+            case .authorizedNoTrack: anyAuthorized = true
+            case .needsPermission: anyNeedsPermission = true
+            case .unavailable: break
+            }
         }
 
-        // Query only apps that are running AND authorized. Querying a
-        // non-running app would launch it (never do that).
-        let musicAllowed = musicRunning && automationGranted.contains(appleMusicBundleID)
-        let spotifyAllowed = spotifyRunning && automationGranted.contains(spotifyBundleID)
-        async let music = musicAllowed ? queryAppleMusic() : nil
-        async let spotify = spotifyAllowed ? querySpotify() : nil
-        let musicSnap = await music
-        let spotifySnap = await spotify
+        if anyAuthorized {
+            authorization = .authorized
+        } else if anyNeedsPermission {
+            authorization = .needsPermission
+        } else {
+            // Player is running but every query failed for a non-permission
+            // reason (transient). Don't claim authorized; surface the CTA.
+            authorization = .needsPermission
+        }
 
         // Pick the active source: a playing app beats a paused one. If both
         // play (rare), Apple Music wins by convention.
@@ -144,46 +160,13 @@ final class AppleScriptMediaService: ObservableObject, MediaServiceProtocol {
         await applySnapshot(snap, source: source)
     }
 
-    /// Read (without prompting) the Automation status for each running player
-    /// and fold it into `authorization` + `automationGranted`. Polling uses
-    /// this so background ticks never block on or trigger a system prompt;
-    /// toggling the System Settings switch is picked up here too.
-    private func refreshAuthorization(musicRunning: Bool, spotifyRunning: Bool) async {
-        var anyAuthorized = false
-
-        if musicRunning {
-            let p = await runner.automationPermission(bundleID: appleMusicBundleID, prompt: false)
-            if p == .granted { automationGranted.insert(appleMusicBundleID); anyAuthorized = true }
-            else { automationGranted.remove(appleMusicBundleID) }
-        }
-        if spotifyRunning {
-            let p = await runner.automationPermission(bundleID: spotifyBundleID, prompt: false)
-            if p == .granted { automationGranted.insert(spotifyBundleID); anyAuthorized = true }
-            else { automationGranted.remove(spotifyBundleID) }
-        }
-
-        authorization = anyAuthorized ? .authorized : .needsPermission
-    }
-
-    /// Show the system Automation prompt for every running supported player.
-    /// Marks `didAutoPrompt` so the background poll won't auto-show it again,
-    /// then re-polls to reflect the user's choice immediately.
-    private func promptForRunningPlayers(activate: Bool) async {
-        didAutoPrompt = true
-        if activate { NSApp.activate(ignoringOtherApps: true) }
-
-        let running = Set(NSWorkspace.shared.runningApplications.compactMap { $0.bundleIdentifier })
-        if running.contains(appleMusicBundleID) {
-            _ = await runner.automationPermission(bundleID: appleMusicBundleID, prompt: true)
-        }
-        if running.contains(spotifyBundleID) {
-            _ = await runner.automationPermission(bundleID: spotifyBundleID, prompt: true)
-        }
-        await poll()
-    }
-
     func requestMusicAuthorization() async {
-        await promptForRunningPlayers(activate: true)
+        // Bring the app forward so the system prompt is focused, then poll —
+        // the query send re-triggers the prompt while the grant is
+        // undetermined. (Once denied, macOS won't re-prompt; the in-app
+        // "open System Settings" affordance covers that case.)
+        NSApp.activate(ignoringOtherApps: true)
+        await poll()
     }
 
     private func pickActive(music: Snapshot?, spotify: Snapshot?) -> (Source, Snapshot)? {
@@ -254,7 +237,7 @@ final class AppleScriptMediaService: ObservableObject, MediaServiceProtocol {
         let position: TimeInterval
     }
 
-    private func queryAppleMusic() async -> Snapshot? {
+    private func queryAppleMusic() async -> QueryOutcome {
         let d = fieldSeparator
         let script = """
         tell application "Music"
@@ -269,11 +252,10 @@ final class AppleScriptMediaService: ObservableObject, MediaServiceProtocol {
             end try
         end tell
         """
-        guard let raw = await runner.runString(script) else { return nil }
-        return parse(raw, delimiter: d, durationInMillis: false)
+        return interpret(await runner.runWithStatus(script), delimiter: d, durationInMillis: false)
     }
 
-    private func querySpotify() async -> Snapshot? {
+    private func querySpotify() async -> QueryOutcome {
         let d = fieldSeparator
         // Spotify reports duration in milliseconds; player position in
         // seconds (float). We normalize duration to seconds in `parse`.
@@ -290,8 +272,21 @@ final class AppleScriptMediaService: ObservableObject, MediaServiceProtocol {
             end try
         end tell
         """
-        guard let raw = await runner.runString(script) else { return nil }
-        return parse(raw, delimiter: d, durationInMillis: true)
+        return interpret(await runner.runWithStatus(script), delimiter: d, durationInMillis: true)
+    }
+
+    /// Map a raw script result to a `QueryOutcome`. -1743 is the Automation
+    /// permission denial; any other error is treated as transient/unavailable.
+    private func interpret(_ result: AppleScriptRunner.ScriptResult, delimiter: String, durationInMillis: Bool) -> QueryOutcome {
+        if let code = result.errorCode {
+            return code == -1743 ? .needsPermission : .unavailable
+        }
+        guard let raw = result.value else { return .authorizedNoTrack }
+        if let snap = parse(raw, delimiter: delimiter, durationInMillis: durationInMillis) {
+            return .track(snap)
+        }
+        // Authorized, but nothing loaded (returned "stopped"/empty).
+        return .authorizedNoTrack
     }
 
     private func parse(_ raw: String, delimiter: String, durationInMillis: Bool) -> Snapshot? {
