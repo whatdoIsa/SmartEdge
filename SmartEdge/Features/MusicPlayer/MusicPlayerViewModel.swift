@@ -18,6 +18,9 @@ final class MusicPlayerViewModel: ObservableObject {
     /// can bind directly without rebuilding the whole `NowPlayingInfo`
     /// struct on each tick.
     @Published var displayedElapsed: TimeInterval = 0
+    /// Whether the app can read Now Playing. When `.needsPermission` the view
+    /// shows a "grant access" affordance instead of the generic empty state.
+    @Published var authorization: MediaAuthorizationStatus = .unknown
     /// Combined hash of the three display-driving properties. The View uses
     /// a single `.animation(value: displayStateHash)` instead of three
     /// separate modifiers so that simultaneous changes cause one SwiftUI
@@ -28,6 +31,7 @@ final class MusicPlayerViewModel: ObservableObject {
         hasher.combine(error?.localizedDescription)
         hasher.combine(nowPlaying?.title)
         hasher.combine(nowPlaying?.artist)
+        hasher.combine(authorization)
         return hasher.finalize()
     }
 
@@ -127,6 +131,22 @@ final class MusicPlayerViewModel: ObservableObject {
         let config = NSWorkspace.OpenConfiguration()
         NSWorkspace.shared.openApplication(at: url, configuration: config)
     }
+
+    /// Surface the macOS Automation prompt so the user can grant SmartEdge
+    /// permission to read the running player. Re-anchors state afterward.
+    func requestAuthorization() async {
+        await mediaService.requestMusicAuthorization()
+        await refreshPlayerState()
+    }
+
+    /// Fallback when the prompt was already dismissed/denied: deep-link to the
+    /// Automation pane where the user can flip the toggle manually.
+    func openAutomationSettings() {
+        guard let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation") else {
+            return
+        }
+        NSWorkspace.shared.open(url)
+    }
     
     // MARK: - Private Methods
     private func setupBindings() {
@@ -144,7 +164,14 @@ final class MusicPlayerViewModel: ObservableObject {
                 self.updateProgressTimer(isPlaying: nowPlaying?.isPlaying ?? false)
             }
             .store(in: &cancellables)
-        
+
+        mediaService.authorizationStatusPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] status in
+                self?.authorization = status
+            }
+            .store(in: &cancellables)
+
         // Listen for media service errors
         //         mediaService.errorPublisher
         //             .receive(on: DispatchQueue.main)

@@ -29,9 +29,15 @@ final class AppleScriptMediaService: ObservableObject, MediaServiceProtocol {
 
     @Published private var currentTrack: NowPlayingInfo?
     @Published private var isPlaying: Bool = false
+    @Published private var authorization: MediaAuthorizationStatus = .unknown
+
+    var authorizationStatus: MediaAuthorizationStatus { authorization }
 
     var isPlayingPublisher: AnyPublisher<Bool, Never> { $isPlaying.eraseToAnyPublisher() }
     var currentTrackPublisher: AnyPublisher<NowPlayingInfo?, Never> { $currentTrack.eraseToAnyPublisher() }
+    var authorizationStatusPublisher: AnyPublisher<MediaAuthorizationStatus, Never> {
+        $authorization.removeDuplicates().eraseToAnyPublisher()
+    }
 
     // MARK: - Private
 
@@ -46,9 +52,11 @@ final class AppleScriptMediaService: ObservableObject, MediaServiceProtocol {
     private var pollTimer: Timer?
     /// Bundle IDs we've confirmed Automation permission for.
     private var automationGranted: Set<String> = []
-    /// Bundle IDs we've already requested permission for this session, so we
-    /// don't re-prompt every poll while a request is pending or was denied.
-    private var automationRequested: Set<String> = []
+    /// We auto-show the system prompt at most once per session (for
+    /// discoverability on first run); after that the user re-triggers it
+    /// from the in-app "grant access" button so we never nag in the
+    /// background.
+    private var didAutoPrompt = false
     /// (title|artist|album) of the track we last fetched artwork for, so we
     /// don't re-download / re-read the image on every 1.5s poll.
     private var lastArtworkKey: String?
@@ -88,32 +96,43 @@ final class AppleScriptMediaService: ObservableObject, MediaServiceProtocol {
 
     private func poll() async {
         let running = Set(NSWorkspace.shared.runningApplications.compactMap { $0.bundleIdentifier })
+        let musicRunning = running.contains(appleMusicBundleID)
+        let spotifyRunning = running.contains(spotifyBundleID)
 
-        // Ensure Automation permission is requested (and the prompt shown)
-        // before we send query Apple Events. Without this, NSAppleScript's
-        // implicit send is denied silently and the app never appears in the
-        // Automation privacy list. Requested once per target, only while
-        // that target is running (the prompt names the running app).
-        if running.contains(appleMusicBundleID) {
-            await ensureAutomationPermission(for: appleMusicBundleID)
-        }
-        if running.contains(spotifyBundleID) {
-            await ensureAutomationPermission(for: spotifyBundleID)
+        guard musicRunning || spotifyRunning else {
+            authorization = .noPlayerRunning
+            activeSource = nil
+            apply(nil)
+            return
         }
 
-        // Query only apps that are running AND that we're authorized to
-        // control. Querying an unauthorized target just re-denies; querying
-        // a non-running app would launch it (never do that).
-        let musicAllowed = running.contains(appleMusicBundleID) && automationGranted.contains(appleMusicBundleID)
-        let spotifyAllowed = running.contains(spotifyBundleID) && automationGranted.contains(spotifyBundleID)
+        // Non-blocking status check — never shows UI, so the poll can't stall.
+        await refreshAuthorization(musicRunning: musicRunning, spotifyRunning: spotifyRunning)
+
+        if authorization != .authorized {
+            // First run with a player open: surface the system prompt once so
+            // the permission is discoverable without the user hunting for it.
+            // After that, the in-app "grant access" button is the path.
+            if authorization == .needsPermission && !didAutoPrompt {
+                await promptForRunningPlayers(activate: false)
+                return
+            }
+            activeSource = nil
+            apply(nil)
+            return
+        }
+
+        // Query only apps that are running AND authorized. Querying a
+        // non-running app would launch it (never do that).
+        let musicAllowed = musicRunning && automationGranted.contains(appleMusicBundleID)
+        let spotifyAllowed = spotifyRunning && automationGranted.contains(spotifyBundleID)
         async let music = musicAllowed ? queryAppleMusic() : nil
         async let spotify = spotifyAllowed ? querySpotify() : nil
         let musicSnap = await music
         let spotifySnap = await spotify
 
         // Pick the active source: a playing app beats a paused one. If both
-        // play (rare), Apple Music wins by convention. If neither is running
-        // or both stopped, clear.
+        // play (rare), Apple Music wins by convention.
         let chosen = pickActive(music: musicSnap, spotify: spotifySnap)
 
         guard let (source, snap) = chosen else {
@@ -125,23 +144,46 @@ final class AppleScriptMediaService: ObservableObject, MediaServiceProtocol {
         await applySnapshot(snap, source: source)
     }
 
-    /// Request Automation permission for a target the first time we see it
-    /// running. Subsequent polls skip the request (already granted, or
-    /// already prompted-and-pending/denied this session). A denied target
-    /// simply never gets queried; the user can flip it on later in System
-    /// Settings → Privacy & Security → Automation, which we re-detect because
-    /// `requestAutomationPermission` returns `.granted` without re-prompting
-    /// once the toggle is on.
-    private func ensureAutomationPermission(for bundleID: String) async {
-        if automationGranted.contains(bundleID) { return }
-        // Re-query each poll while not yet granted so toggling the System
-        // Settings switch is picked up — but only the FIRST call shows a
-        // prompt (askUserIfNeeded is a no-op once a decision exists).
-        let result = await runner.requestAutomationPermission(bundleID: bundleID)
-        automationRequested.insert(bundleID)
-        if result == .granted {
-            automationGranted.insert(bundleID)
+    /// Read (without prompting) the Automation status for each running player
+    /// and fold it into `authorization` + `automationGranted`. Polling uses
+    /// this so background ticks never block on or trigger a system prompt;
+    /// toggling the System Settings switch is picked up here too.
+    private func refreshAuthorization(musicRunning: Bool, spotifyRunning: Bool) async {
+        var anyAuthorized = false
+
+        if musicRunning {
+            let p = await runner.automationPermission(bundleID: appleMusicBundleID, prompt: false)
+            if p == .granted { automationGranted.insert(appleMusicBundleID); anyAuthorized = true }
+            else { automationGranted.remove(appleMusicBundleID) }
         }
+        if spotifyRunning {
+            let p = await runner.automationPermission(bundleID: spotifyBundleID, prompt: false)
+            if p == .granted { automationGranted.insert(spotifyBundleID); anyAuthorized = true }
+            else { automationGranted.remove(spotifyBundleID) }
+        }
+
+        authorization = anyAuthorized ? .authorized : .needsPermission
+    }
+
+    /// Show the system Automation prompt for every running supported player.
+    /// Marks `didAutoPrompt` so the background poll won't auto-show it again,
+    /// then re-polls to reflect the user's choice immediately.
+    private func promptForRunningPlayers(activate: Bool) async {
+        didAutoPrompt = true
+        if activate { NSApp.activate(ignoringOtherApps: true) }
+
+        let running = Set(NSWorkspace.shared.runningApplications.compactMap { $0.bundleIdentifier })
+        if running.contains(appleMusicBundleID) {
+            _ = await runner.automationPermission(bundleID: appleMusicBundleID, prompt: true)
+        }
+        if running.contains(spotifyBundleID) {
+            _ = await runner.automationPermission(bundleID: spotifyBundleID, prompt: true)
+        }
+        await poll()
+    }
+
+    func requestMusicAuthorization() async {
+        await promptForRunningPlayers(activate: true)
     }
 
     private func pickActive(music: Snapshot?, spotify: Snapshot?) -> (Source, Snapshot)? {

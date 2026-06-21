@@ -90,24 +90,29 @@ final class AppleScriptRunner: @unchecked Sendable {
     enum AutomationPermission {
         case granted
         case denied
-        case notPossible  // target app missing / unexpected error
+        case notDetermined  // no decision yet — a prompt would be shown
+        case notPossible    // target app missing / unexpected error
     }
 
-    /// Explicitly request (and prompt for) Automation permission to control
+    /// Query (and optionally prompt for) Automation permission to control
     /// `bundleID`.
     ///
-    /// Why this is necessary: `NSAppleScript.executeAndReturnError` sends the
-    /// Apple Event with the equivalent of `askUserIfNeeded = false` — when
-    /// the TCC Automation status is undetermined, the sandbox denies the
-    /// send outright (`kernel: deny appleevent-send`) and **no prompt
-    /// appears**. The app then never shows up in System Settings → Privacy &
-    /// Security → Automation, so the user can't grant it manually either.
+    /// Why `AEDeterminePermissionToAutomateTarget` rather than just sending a
+    /// script: `NSAppleScript.executeAndReturnError` sends the Apple Event
+    /// with the equivalent of `askUserIfNeeded = false` — when the TCC
+    /// Automation status is undetermined, the sandbox denies the send
+    /// outright (`kernel: deny appleevent-send`) and **no prompt appears**.
+    /// The app then never shows up in System Settings → Privacy & Security →
+    /// Automation, so the user can't grant it manually either.
+    /// `AEDeterminePermissionToAutomateTarget` is the Apple-sanctioned API
+    /// that surfaces the prompt and registers the app in the Automation list.
     ///
-    /// `AEDeterminePermissionToAutomateTarget(..., askUserIfNeeded: true)` is
-    /// the Apple-sanctioned API that actually surfaces the prompt and
-    /// registers the app in the Automation list. Runs on our serial queue
-    /// because it blocks until the user answers — must not be the main thread.
-    func requestAutomationPermission(bundleID: String) async -> AutomationPermission {
+    /// - Parameter prompt: when `true`, passes `askUserIfNeeded = true` so the
+    ///   system prompt is shown for an undetermined target (this blocks the
+    ///   serial queue until the user answers — never the main thread). When
+    ///   `false`, the call returns the current status without showing UI, so
+    ///   the background poll can read state cheaply and never stall.
+    func automationPermission(bundleID: String, prompt: Bool) async -> AutomationPermission {
         await withCheckedContinuation { continuation in
             queue.async {
                 var target = AEAddressDesc()
@@ -122,13 +127,17 @@ final class AppleScriptRunner: @unchecked Sendable {
                 defer { AEDisposeDesc(&target) }
 
                 let status = AEDeterminePermissionToAutomateTarget(
-                    &target, typeWildCard, typeWildCard, true
+                    &target, typeWildCard, typeWildCard, prompt
                 )
                 switch status {
                 case noErr:
                     continuation.resume(returning: .granted)
                 case OSStatus(errAEEventNotPermitted):
                     continuation.resume(returning: .denied)
+                // -1744: consent required but askUserIfNeeded was false, i.e.
+                // the user hasn't decided yet and we chose not to prompt.
+                case -1744:
+                    continuation.resume(returning: .notDetermined)
                 default:
                     continuation.resume(returning: .notPossible)
                 }

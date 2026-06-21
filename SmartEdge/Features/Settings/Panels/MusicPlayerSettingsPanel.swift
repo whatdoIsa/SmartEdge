@@ -14,11 +14,42 @@ struct MusicPlayerSettingsPanel: View {
 
                 integrationSection
 
+                permissionSection
+
                 pulseSection
 
                 displaySection
             }
             .padding()
+        }
+    }
+
+    /// Apple Music / Spotify are read via macOS Automation, which needs a
+    /// one-time user grant. Surface it here so the user can trigger the prompt
+    /// or jump to System Settings if they dismissed it.
+    private var permissionSection: some View {
+        SettingsCard("권한") {
+            SettingRow(
+                title: "음악 앱 제어",
+                description: "Apple Music · Spotify의 재생 정보를 노치에 표시하려면 자동화 권한이 필요합니다"
+            ) {
+                Button("권한 요청") {
+                    Task { await ServiceContainer.shared.mediaService.requestMusicAuthorization() }
+                }
+            }
+
+            SettingsRowDivider()
+
+            SettingRow(
+                title: "권한이 보이지 않나요?",
+                description: "시스템 설정 → 개인정보 보호 및 보안 → 자동화에서 직접 켤 수 있습니다"
+            ) {
+                Button("시스템 설정 열기") {
+                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation") {
+                        NSWorkspace.shared.open(url)
+                    }
+                }
+            }
         }
     }
 

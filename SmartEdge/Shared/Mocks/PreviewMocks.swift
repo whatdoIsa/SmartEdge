@@ -13,6 +13,8 @@ class PreviewMockMediaService: MediaServiceProtocol {
     var isAvailable: Bool = true
     var isPlayingPublisher: AnyPublisher<Bool, Never> = Just(false).eraseToAnyPublisher()
     var currentTrackPublisher: AnyPublisher<NowPlayingInfo?, Never> = Just(nil).eraseToAnyPublisher()
+    var authorizationStatus: MediaAuthorizationStatus = .authorized
+    var authorizationStatusPublisher: AnyPublisher<MediaAuthorizationStatus, Never> = Just(.authorized).eraseToAnyPublisher()
 
     init() {
         currentNowPlaying = NowPlayingInfo(
@@ -39,6 +41,7 @@ class PreviewMockMediaService: MediaServiceProtocol {
     func seek(to time: TimeInterval) async throws {}
     func toggleShuffle() async throws {}
     func toggleRepeat() async throws {}
+    func requestMusicAuthorization() async {}
 }
 
 @MainActor

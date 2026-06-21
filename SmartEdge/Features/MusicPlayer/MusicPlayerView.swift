@@ -37,6 +37,17 @@ struct MusicPlayerView: View {
                     }
                 }
                 .fadeTransition()
+            } else if viewModel.authorization == .needsPermission {
+                EmptyStateView(
+                    icon: "lock.fill",
+                    title: "음악 권한 필요",
+                    subtitle: "노치에 곡을 표시하려면 Apple Music · Spotify 제어를 허용해 주세요",
+                    actionTitle: "권한 허용",
+                    action: {
+                        Task { await viewModel.requestAuthorization() }
+                    }
+                )
+                .fadeTransition()
             } else if viewModel.nowPlaying == nil {
                 EmptyStateView(
                     icon: "music.note",
