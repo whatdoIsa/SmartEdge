@@ -9,6 +9,10 @@ struct NotchStatusBar: View {
     let clock: String
     let battery: BatteryInfo?
     let bluetooth: BluetoothInfo?
+    /// Width of the empty center gap reserved for the hardware camera notch,
+    /// so the clock sits to its left and battery/bluetooth to its right —
+    /// mirroring the real menu-bar-around-the-notch layout.
+    var notchGap: CGFloat = 200
 
     var body: some View {
         HStack(spacing: 8) {
@@ -17,7 +21,8 @@ struct NotchStatusBar: View {
                 .foregroundColor(.primary)
                 .monospacedDigit()
 
-            Spacer(minLength: 8)
+            // Reserve the center for the physical notch.
+            Spacer(minLength: notchGap)
 
             if let battery = battery {
                 BatteryStatusBadge(battery: battery)
@@ -26,9 +31,10 @@ struct NotchStatusBar: View {
                 BluetoothStatusBadge(bluetooth: bluetooth)
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 4)
-        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 18)
+        // Fill the notch-height band and center items vertically so they
+        // line up with the system menu bar beside the camera notch.
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("System status")
     }

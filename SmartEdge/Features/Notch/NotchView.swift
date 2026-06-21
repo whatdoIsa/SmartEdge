@@ -131,7 +131,6 @@ struct NotchView: View {
                     // is needed (and adding one would push content below the
                     // visible window).
                     expandedLayout
-                        .padding(.top, viewModel.isExpanded ? hardwareNotchInset : 0)
                         // Force dark-on-black readability for every child view.
                         // The notch background is hard-coded `Color.black` (to
                         // tonally match the hardware camera notch), so the
@@ -255,11 +254,20 @@ struct NotchView: View {
     private var expandedLayout: some View {
         if viewModel.isExpanded {
             VStack(spacing: 0) {
+                // Status strip occupies the camera-notch-height band at the
+                // very top (no inset above it), so the clock + battery sit at
+                // the real menu-bar level on either side of the physical
+                // notch. `notchGap` keeps the center clear for the camera.
                 NotchStatusBar(
                     clock: viewModel.clockText,
                     battery: viewModel.statusBattery,
-                    bluetooth: viewModel.statusBluetooth
+                    bluetooth: viewModel.statusBluetooth,
+                    notchGap: NotchConfiguration.default.width
                 )
+                .frame(height: hardwareNotchInset)
+
+                // Main content (music, calendar, …) sits below the notch band
+                // so it's never clipped by the camera cutout.
                 contentView
                 Spacer(minLength: 0)
             }
