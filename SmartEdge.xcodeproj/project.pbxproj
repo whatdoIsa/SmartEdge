@@ -85,6 +85,7 @@
 		B51AAA59B334497C918FE489 /* SmartEdge/Features/Notch/NotificationContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8622251ABAA42AFAD89996B /* SmartEdge/Features/Notch/NotificationContentView.swift */; };
 		B621BF7D751446E189CF023E /* SmartEdge/Features/Settings/Components/PermissionStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0586A9CD5994E42A38D049A /* SmartEdge/Features/Settings/Components/PermissionStatusView.swift */; };
 		A3A2B3C4D5E6F70819203170 /* SmartEdge/Features/Settings/Components/ProLockOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4A2B3C4D5E6F70819203171 /* SmartEdge/Features/Settings/Components/ProLockOverlay.swift */; };
+		A3A2B3C4D5E6F70819203180 /* SmartEdge/Features/Settings/Components/SettingsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4A2B3C4D5E6F70819203181 /* SmartEdge/Features/Settings/Components/SettingsCard.swift */; };
 		B6FA89F84EE84A53B2B537EB /* SmartEdge/Features/Notch/NotchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66D74D1258AB47F68F852AB2 /* SmartEdge/Features/Notch/NotchViewModel.swift */; };
 		B7082FB084E3471787FB651C /* SmartEdge/Features/Pomodoro/PomodoroStatisticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A81A090F536C4D21822095A2 /* SmartEdge/Features/Pomodoro/PomodoroStatisticsView.swift */; };
 		B8D184CC2E294D68AF75D000 /* SmartEdge/Shared/Models/NowPlayingModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECAE9087FEE7410A8FB2F272 /* SmartEdge/Shared/Models/NowPlayingModel.swift */; };
@@ -205,6 +206,7 @@
 		AA862A227FF64CA58BE480D0 /* SmartEdge/Shared/Components/NotchShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Shared/Components/NotchShape.swift; sourceTree = "<group>"; };
 		B0586A9CD5994E42A38D049A /* SmartEdge/Features/Settings/Components/PermissionStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Settings/Components/PermissionStatusView.swift; sourceTree = "<group>"; };
 		A4A2B3C4D5E6F70819203171 /* SmartEdge/Features/Settings/Components/ProLockOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Settings/Components/ProLockOverlay.swift; sourceTree = "<group>"; };
+		A4A2B3C4D5E6F70819203181 /* SmartEdge/Features/Settings/Components/SettingsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Settings/Components/SettingsCard.swift; sourceTree = "<group>"; };
 		B1C2D3E4F506172839A4B5C6 /* SmartEdge/Shared/Components/NotchTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Shared/Components/NotchTheme.swift; sourceTree = "<group>"; };
 		B2446B54485E4E2894737B9F /* SmartEdge/Core/Protocols/NotchCoordinatorProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Protocols/NotchCoordinatorProtocol.swift; sourceTree = "<group>"; };
 		B6EE71459AB645E1A0A091A3 /* SmartEdge/Features/Settings/SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Settings/SettingsViewModel.swift; sourceTree = "<group>"; };
@@ -671,6 +673,7 @@
 				D8AD549F74824F7FB8FDEE8C /* SmartEdge/Features/Settings/Components/PermissionRow.swift in Sources */,
 				B621BF7D751446E189CF023E /* SmartEdge/Features/Settings/Components/PermissionStatusView.swift in Sources */,
 				A3A2B3C4D5E6F70819203170 /* SmartEdge/Features/Settings/Components/ProLockOverlay.swift in Sources */,
+				A3A2B3C4D5E6F70819203180 /* SmartEdge/Features/Settings/Components/SettingsCard.swift in Sources */,
 				E8804790A84245C5AA66675B /* SmartEdge/Features/Settings/Panels/CalendarSettingsPanel.swift in Sources */,
 				4205D694014F47B7B28903DB /* SmartEdge/Features/Settings/Panels/GeneralSettingsPanel.swift in Sources */,
 				F1A2B3C4D5E6F70819203160 /* SmartEdge/Features/Settings/Panels/ProSettingsPanel.swift in Sources */,

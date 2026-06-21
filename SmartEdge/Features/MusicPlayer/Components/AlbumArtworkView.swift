@@ -4,16 +4,18 @@ import SwiftUI
 struct AlbumArtworkView: View {
     let artwork: NSImage?
     let size: CGFloat
-    
+    let cornerRadius: CGFloat
+
     @State private var imageScale: CGFloat = 1.0
     @State private var shadowRadius: CGFloat = 4.0
     @State private var isLoaded = false
-    
-    init(artwork: NSImage?, size: CGFloat = 60) {
+
+    init(artwork: NSImage?, size: CGFloat = 60, cornerRadius: CGFloat = 8) {
         self.artwork = artwork
         self.size = size
+        self.cornerRadius = cornerRadius
     }
-    
+
     var body: some View {
         Group {
             if let artwork = artwork {
@@ -21,9 +23,9 @@ struct AlbumArtworkView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: size, height: size)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
                     .overlay {
-                        RoundedRectangle(cornerRadius: 8)
+                        RoundedRectangle(cornerRadius: cornerRadius)
                             .stroke(.primary.opacity(0.1), lineWidth: 0.5)
                     }
             } else {
@@ -48,13 +50,10 @@ struct AlbumArtworkView: View {
     
     // MARK: - Private Views
     private var placeholderArtwork: some View {
-        RoundedRectangle(cornerRadius: 8)
+        RoundedRectangle(cornerRadius: cornerRadius)
             .fill(
                 LinearGradient(
-                    colors: [
-                        .gray.opacity(0.3),
-                        .gray.opacity(0.1)
-                    ],
+                    colors: [NotchTheme.brandCoral, NotchTheme.brandPink],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
@@ -62,12 +61,12 @@ struct AlbumArtworkView: View {
             .frame(width: size, height: size)
             .overlay {
                 Image(systemName: "music.note")
-                    .font(.system(size: size * 0.4))
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: size * 0.38, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.9))
             }
             .overlay {
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(.primary.opacity(0.1), lineWidth: 0.5)
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .stroke(.white.opacity(0.12), lineWidth: 0.5)
             }
     }
     

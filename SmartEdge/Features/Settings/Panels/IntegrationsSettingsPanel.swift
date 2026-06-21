@@ -1,7 +1,5 @@
 import SwiftUI
 
-/// Settings panel for third-party integrations. Keeps credentials in
-/// @AppStorage for now — move to Keychain before shipping a public release.
 struct IntegrationsSettingsPanel: View {
     @EnvironmentObject var settings: SettingsViewModel
 
@@ -16,48 +14,27 @@ struct IntegrationsSettingsPanel: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                header
+            VStack(alignment: .leading, spacing: 20) {
+                SettingsPanelHeader(
+                    icon: "link",
+                    title: "Integrations",
+                    subtitle: "Connect external services so the notch can notify them"
+                )
+
                 slackSection
             }
             .padding()
         }
         .onChange(of: settings.slackWebhookURL) { _ in
-            // Clear any stale "Sent ✓ / Failed: 404" feedback when the user
-            // edits the URL — otherwise the success label looks like it
-            // applies to the new URL they're typing.
             if slackTestStatus != .idle { slackTestStatus = .idle }
         }
     }
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: "link")
-                    .font(.title2)
-                    .foregroundColor(.accentColor)
-                Text("Integrations")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-            }
-            Text("Connect external services so the notch can notify them.")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-        }
-    }
-
-    // MARK: - Slack
-
     private var slackSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Slack")
-                .font(.headline)
-                .fontWeight(.semibold)
-
+        SettingsCard("Slack") {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Incoming Webhook URL")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
+                    .font(.system(size: 13, weight: .medium))
                 TextField(
                     "https://hooks.slack.com/services/…",
                     text: $settings.slackWebhookURL
@@ -66,38 +43,35 @@ struct IntegrationsSettingsPanel: View {
                 .disableAutocorrection(true)
 
                 Text("Create an incoming webhook at api.slack.com → Your Apps → Incoming Webhooks, then paste the URL here.")
-                    .font(.caption)
+                    .font(.system(size: 11))
                     .foregroundColor(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
 
-            Toggle(
-                "Send a message when a focus session ends",
-                isOn: $settings.slackNotifyOnFocusComplete
+            SettingsRowDivider()
+
+            SettingRow(
+                toggle: "Send a message when a focus session ends",
+                isOn: $settings.slackNotifyOnFocusComplete,
+                isEnabled: !settings.slackWebhookURL.isEmpty
             )
-            .disabled(settings.slackWebhookURL.isEmpty)
 
-            slackTestRow
+            SettingsRowDivider()
+
+            SettingRow(
+                title: "Test connection",
+                description: "Posts a sample message to the webhook URL above"
+            ) {
+                slackTestControl
+            }
         }
     }
 
     @ViewBuilder
-    private var slackTestRow: some View {
+    private var slackTestControl: some View {
         HStack(spacing: 12) {
-            Button {
-                sendSlackTestMessage()
-            } label: {
-                if case .sending = slackTestStatus {
-                    HStack(spacing: 6) {
-                        ProgressView().controlSize(.small)
-                        Text("Sending…")
-                    }
-                } else {
-                    Text("Send Test Message")
-                }
-            }
-            .disabled(settings.slackWebhookURL.isEmpty || slackTestStatus == .sending)
-
             switch slackTestStatus {
             case .idle, .sending:
                 EmptyView()
@@ -112,7 +86,19 @@ struct IntegrationsSettingsPanel: View {
                     .lineLimit(2)
             }
 
-            Spacer()
+            Button {
+                sendSlackTestMessage()
+            } label: {
+                if case .sending = slackTestStatus {
+                    HStack(spacing: 6) {
+                        ProgressView().controlSize(.small)
+                        Text("Sending…")
+                    }
+                } else {
+                    Text("Send Test Message")
+                }
+            }
+            .disabled(settings.slackWebhookURL.isEmpty || slackTestStatus == .sending)
         }
     }
 

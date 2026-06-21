@@ -52,6 +52,33 @@ enum SettingsPanel: String, CaseIterable, Identifiable {
         default: return false
         }
     }
+
+    /// Sidebar grouping. Sections render in this declared order with a small
+    /// uppercase header (except `.top`, which has none).
+    enum Section: Int, CaseIterable {
+        case top        // General, Pro — no header
+        case features   // free features
+        case pro        // Pro-gated features
+        case other      // integrations, privacy
+
+        var title: String? {
+            switch self {
+            case .top: return nil
+            case .features: return "기능"
+            case .pro: return "Pro 기능"
+            case .other: return "기타"
+            }
+        }
+    }
+
+    var section: Section {
+        switch self {
+        case .general, .pro: return .top
+        case .notchDisplay, .musicPlayer, .systemStatus: return .features
+        case .calendar, .shelf: return .pro
+        case .integrations, .privacy: return .other
+        }
+    }
 }
 
 @MainActor

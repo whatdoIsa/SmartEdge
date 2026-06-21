@@ -5,168 +5,93 @@ struct GeneralSettingsPanel: View {
     
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                panelHeader
-                
+            VStack(alignment: .leading, spacing: 20) {
+                SettingsPanelHeader(
+                    icon: "gearshape",
+                    title: "General",
+                    subtitle: "Configure basic app behavior and startup preferences"
+                )
+
                 startupSection
-                
-                Divider()
-                
+
                 behaviorSection
-                
-                Divider()
-                
+
                 updatesSection
-                
-                Divider()
-                
+
                 aboutSection
             }
             .padding()
         }
     }
-    
-    private var panelHeader: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: "gearshape")
-                    .font(.title2)
-                    .foregroundColor(.blue)
-                
-                Text("General")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-            }
-            
-            Text("Configure basic app behavior and startup preferences")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-        }
-    }
-    
+
     private var startupSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Startup")
-                .font(.headline)
-                .fontWeight(.semibold)
-            
-            VStack(alignment: .leading, spacing: 12) {
-                Toggle("Launch SmartEdge at login", isOn: $settings.launchAtLogin)
-                    .onChange(of: settings.launchAtLogin) { newValue in
-                        configureLaunchAtLogin(newValue)
-                    }
-                
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Automatically start SmartEdge when you log in")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    Spacer()
-                }
+        SettingsCard("Startup") {
+            SettingRow(
+                toggle: "Launch SmartEdge at login",
+                description: "Automatically start SmartEdge when you log in",
+                isOn: $settings.launchAtLogin
+            )
+            .onChange(of: settings.launchAtLogin) { newValue in
+                configureLaunchAtLogin(newValue)
             }
-            .padding(.leading, 8)
         }
     }
-    
+
     private var behaviorSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Behavior")
-                .font(.headline)
-                .fontWeight(.semibold)
-            
-            VStack(alignment: .leading, spacing: 12) {
-                Toggle("Auto-hide when app loses focus", isOn: $settings.autoHideOnLostFocus)
-                
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Automatically hide notch when switching to other applications")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    Spacer()
-                }
-            }
-            .padding(.leading, 8)
+        SettingsCard("Behavior") {
+            SettingRow(
+                toggle: "Auto-hide when app loses focus",
+                description: "Automatically hide notch when switching to other applications",
+                isOn: $settings.autoHideOnLostFocus
+            )
         }
     }
-    
+
     private var updatesSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Updates")
-                .font(.headline)
-                .fontWeight(.semibold)
-            
-            VStack(alignment: .leading, spacing: 12) {
-                Toggle("Check for updates automatically", isOn: $settings.checkUpdatesAutomatically)
-                
-                Toggle("Include beta updates", isOn: $settings.betaUpdates)
+        SettingsCard("Updates") {
+            SettingRow(
+                toggle: "Check for updates automatically",
+                isOn: $settings.checkUpdatesAutomatically
+            )
+
+            SettingsRowDivider()
+
+            SettingRow(
+                toggle: "Include beta updates",
+                isOn: $settings.betaUpdates,
+                isEnabled: settings.checkUpdatesAutomatically
+            )
+
+            SettingsRowDivider()
+
+            SettingRow(title: "Check for updates now") {
+                Button("Check Now") { checkForUpdates() }
                     .disabled(!settings.checkUpdatesAutomatically)
-                
-                HStack {
-                    Button("Check Now") {
-                        checkForUpdates()
-                    }
-                    .disabled(!settings.checkUpdatesAutomatically)
-                    
-                    Spacer()
-                }
-                .padding(.top, 8)
             }
-            .padding(.leading, 8)
         }
     }
-    
+
     private var aboutSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("About")
-                .font(.headline)
-                .fontWeight(.semibold)
-            
-            HStack {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Image(systemName: "app.badge")
-                            .font(.title)
-                            .foregroundColor(.blue)
-                        
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("SmartEdge")
-                                .font(.headline)
-                                .fontWeight(.semibold)
-                            
-                            Text("Version 1.0.0 (Build 1)")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    
-                    Text("A powerful notch utility for macOS")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-                
-                Spacer()
+        SettingsCard("About") {
+            SettingRow(
+                title: "SmartEdge",
+                description: "Version 1.0.0 (Build 1) — a powerful notch utility for macOS"
+            ) {
+                Image(nsImage: NSApp.applicationIconImage)
+                    .resizable()
+                    .frame(width: 36, height: 36)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
             }
-            .padding()
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
-            
-            HStack(spacing: 16) {
-                Button("Visit Website") {
-                    openURL("https://smartedge.app")
+
+            SettingsRowDivider()
+
+            SettingRow(title: "Links") {
+                HStack(spacing: 12) {
+                    Button("Website") { openURL("https://smartedge.app") }
+                    Button("Report Issue") { openURL("https://github.com/smartedge/issues") }
+                    Button("Release Notes") { openURL("https://github.com/smartedge/releases") }
                 }
-                
-                Button("Report Issue") {
-                    openURL("https://github.com/smartedge/issues")
-                }
-                
-                Button("Release Notes") {
-                    openURL("https://github.com/smartedge/releases")
-                }
-                
-                Spacer()
             }
-            .padding(.leading, 8)
         }
     }
     

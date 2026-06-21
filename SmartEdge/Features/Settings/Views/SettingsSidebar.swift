@@ -15,48 +15,72 @@ struct SettingsSidebar: View {
             }
         }
     }
-    
+
+    /// Panels split into their declared sections, preserving section order and
+    /// dropping any section the current search left empty.
+    private var groupedSections: [(section: SettingsPanel.Section, panels: [SettingsPanel])] {
+        SettingsPanel.Section.allCases.compactMap { section in
+            let panels = filteredPanels.filter { $0.section == section }
+            return panels.isEmpty ? nil : (section, panels)
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             sidebarHeader
-            
-            Divider()
-                .padding(.horizontal)
-            
+
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 2) {
-                    ForEach(filteredPanels) { panel in
-                        sidebarItem(for: panel)
+                    ForEach(groupedSections, id: \.section) { group in
+                        if let title = group.section.title {
+                            sectionHeader(title)
+                        }
+                        ForEach(group.panels) { panel in
+                            sidebarItem(for: panel)
+                        }
                     }
                 }
-                .padding(.vertical, 8)
+                .padding(.vertical, 6)
             }
-            
-            Spacer()
-            
+
+            Spacer(minLength: 0)
+
             sidebarFooter
         }
-        .frame(minWidth: 200, idealWidth: 220)
-        .background(.regularMaterial, in: Rectangle())
+        .background(Color(NSColor.windowBackgroundColor))
     }
-    
+
     private var sidebarHeader: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: "gearshape.2")
-                    .font(.title2)
-                    .foregroundColor(.secondary)
-                
-                Text("Settings")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                
-                Spacer()
+        HStack(spacing: 10) {
+            Image(nsImage: NSApp.applicationIconImage)
+                .resizable()
+                .frame(width: 32, height: 32)
+                .clipShape(RoundedRectangle(cornerRadius: 7))
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text("SmartEdge")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.primary)
+
+                Text(store.isPro ? "Pro" : "Free")
+                    .font(.system(size: 10, weight: store.isPro ? .bold : .medium))
+                    .foregroundColor(store.isPro ? NotchTheme.brandCoral : .secondary)
             }
-            .padding(.horizontal)
-            .padding(.top, 16)
-            .padding(.bottom, 8)
+
+            Spacer()
         }
+        .padding(.horizontal, 16)
+        .padding(.top, 14)
+        .padding(.bottom, 10)
+    }
+
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title.uppercased())
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 20)
+            .padding(.top, 14)
+            .padding(.bottom, 2)
     }
     
     private func sidebarItem(for panel: SettingsPanel) -> some View {
@@ -85,16 +109,16 @@ struct SettingsSidebar: View {
                         .accessibilityLabel("Pro 잠금")
                 }
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
             .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(selectedPanel == panel ? .blue : .clear)
+                RoundedRectangle(cornerRadius: 7)
+                    .fill(selectedPanel == panel ? Color.accentColor : .clear)
             )
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .padding(.horizontal, 8)
+        .padding(.horizontal, 10)
     }
     
     private var sidebarFooter: some View {

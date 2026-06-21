@@ -89,4 +89,46 @@ enum NotchTheme {
     /// the expand itself. Keep these for theme tint pulses.
     static let dropScale: CGFloat = 1.05
     static let actionPulseDelta: CGFloat = 0.03
+
+    // MARK: - Music Player (redesign tokens)
+    //
+    // Centralized so the notch music UI reads as one cohesive surface and
+    // tweaks ripple everywhere. Values mirror the approved mockup direction:
+    // rounded album art, clear title/artist hierarchy, a filled circular
+    // play button flanked by light prev/next glyphs, slim progress bar.
+
+    /// Album artwork edge length + corner radius.
+    static let artworkSize: CGFloat = 56
+    static let artworkCornerRadius: CGFloat = 12
+
+    /// Track-title / artist text. White-on-black inside the notch; artist is
+    /// a dimmed white rather than `.secondary` so it stays legible on pure
+    /// black (system secondary resolves too dark there).
+    static let trackTitleSize: CGFloat = 15
+    static let trackArtistSize: CGFloat = 12
+    static let trackArtistOpacity: Double = 0.6
+
+    /// Transport controls. The play/pause is a filled circle (inverted:
+    /// white bg, black glyph) to read as the primary action; prev/next are
+    /// plain light glyphs.
+    static let playButtonDiameter: CGFloat = 34
+    static let transportGlyphSize: CGFloat = 18
+    static let playGlyphSize: CGFloat = 16
+
+    /// Progress bar.
+    static let progressBarHeight: CGFloat = 4
+    static let progressTrackOpacity: Double = 0.18
+    static let progressTimeOpacity: Double = 0.5
+
+    // MARK: - Status Bar
+
+    /// Clock / battery / bluetooth strip text.
+    static let statusTextSize: CGFloat = 12
+
+    // MARK: - Accents
+
+    /// Warm brand accent (Airbnb-leaning coral) for artwork placeholder and
+    /// focal highlights. Cool blue stays for system/info affordances.
+    static let brandCoral = Color(red: 1.0, green: 0.42, blue: 0.42)
+    static let brandPink = Color(red: 0.99, green: 0.47, blue: 0.66)
 }

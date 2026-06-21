@@ -16,17 +16,19 @@ struct ProSettingsPanel: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
+            VStack(alignment: .leading, spacing: 20) {
                 header
-                Divider()
-                featureList
-                Divider()
+
+                featureCard
+
                 purchaseSection
+
                 if let error = store.lastError {
                     Text(error)
                         .font(.caption)
                         .foregroundStyle(.red)
                 }
+
                 footnote
             }
             .padding()
@@ -34,13 +36,17 @@ struct ProSettingsPanel: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 10) {
                 Image(systemName: "sparkles")
-                    .font(.title2)
-                    .foregroundStyle(.tint)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(NotchTheme.brandCoral)
+                    .frame(width: 30, height: 30)
+                    .background(NotchTheme.brandCoral.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+
                 Text("SmartEdge Pro")
-                    .font(.largeTitle).fontWeight(.bold)
+                    .font(.system(size: 24, weight: .bold))
+
                 if store.isPro {
                     Text("활성화됨")
                         .font(.caption).fontWeight(.semibold)
@@ -49,6 +55,7 @@ struct ProSettingsPanel: View {
                         .foregroundStyle(.green)
                 }
             }
+
             Text(store.isPro
                  ? "모든 Pro 기능이 잠금 해제되었습니다. 감사합니다."
                  : "한 번 구매로 모든 Pro 기능을 영구적으로 사용하세요.")
@@ -57,23 +64,18 @@ struct ProSettingsPanel: View {
         }
     }
 
-    private var featureList: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Pro 기능")
-                .font(.headline)
-            ForEach(proFeatures, id: \.title) { feature in
-                HStack(alignment: .top, spacing: 12) {
-                    Image(systemName: feature.icon)
-                        .font(.title3)
-                        .foregroundStyle(.tint)
-                        .frame(width: 28)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(feature.title).font(.body).fontWeight(.medium)
-                        Text(feature.detail).font(.caption).foregroundStyle(.secondary)
-                    }
-                    Spacer()
+    private var featureCard: some View {
+        SettingsCard("Pro 기능") {
+            ForEach(Array(proFeatures.enumerated()), id: \.element.title) { index, feature in
+                if index > 0 { SettingsRowDivider() }
+                SettingRow(title: feature.title, description: feature.detail) {
                     if store.isPro {
-                        Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                    } else {
+                        Image(systemName: feature.icon)
+                            .font(.system(size: 15))
+                            .foregroundColor(NotchTheme.brandCoral)
                     }
                 }
             }

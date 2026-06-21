@@ -10,25 +10,28 @@ struct CalendarSettingsPanel: View {
     /// permission guide use — otherwise three independent EKEventStores
     /// would each have to ask for permission separately.
     private let calendarService = ServiceContainer.shared.calendarService
-    
+
+    private var hasReadAccess: Bool {
+        CalendarService.statusGrantsReadAccess(calendarAccess)
+    }
+
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                panelHeader
-                
-                integrationSection
-                
-                Divider()
-                
-                displaySection
-                
-                Divider()
-                
-                refreshSection
-                
-                Divider()
-                
-                permissionsSection
+            VStack(alignment: .leading, spacing: 20) {
+                SettingsPanelHeader(
+                    icon: "calendar",
+                    title: "Calendar",
+                    subtitle: "Display upcoming events and meetings in the notch",
+                    tint: .blue
+                )
+
+                eventDisplaySection
+
+                displayOptionsSection
+
+                synchronizationSection
+
+                calendarAccessSection
             }
             .padding()
         }
@@ -45,228 +48,107 @@ struct CalendarSettingsPanel: View {
             checkCalendarAccess()
         }
     }
-    
-    private var panelHeader: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: "calendar")
-                    .font(.title2)
-                    .foregroundColor(.blue)
-                
-                Text("Calendar")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-            }
-            
-            Text("Display upcoming events and meetings in the notch")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+
+    private var eventDisplaySection: some View {
+        SettingsCard("Event Display") {
+            SettingRow(
+                toggle: "Show upcoming events",
+                description: "Display upcoming calendar events in the notch area with smart prioritization",
+                isOn: $settings.showUpcomingEvents,
+                isEnabled: hasReadAccess
+            )
+
+            SettingsRowDivider()
+
+            SettingRow(
+                toggle: "Include all-day events",
+                description: "Show events that span the entire day alongside timed events",
+                isOn: $settings.showAllDayEvents,
+                isEnabled: settings.showUpcomingEvents && hasReadAccess
+            )
         }
     }
-    
-    private var integrationSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Event Display")
-                .font(.headline)
-                .fontWeight(.semibold)
-            
-            VStack(alignment: .leading, spacing: 12) {
-                Toggle("Show upcoming events", isOn: $settings.showUpcomingEvents)
-                    .disabled(!CalendarService.statusGrantsReadAccess(calendarAccess))
-                
-                Toggle("Include all-day events", isOn: $settings.showAllDayEvents)
-                    .disabled(!settings.showUpcomingEvents || !CalendarService.statusGrantsReadAccess(calendarAccess))
-                
-                if settings.showUpcomingEvents && CalendarService.statusGrantsReadAccess(calendarAccess) {
-                    calendarPreview
-                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
+
+    private var displayOptionsSection: some View {
+        SettingsCard("Display Options") {
+            SettingRow(
+                title: "Look-ahead window",
+                description: "How far ahead to look for upcoming events (1 hour to 1 week)"
+            ) {
+                HStack(spacing: 10) {
+                    Slider(value: $settings.eventLookAhead, in: 1...168, step: 1)
+                        .frame(width: 130)
+                        .disabled(!settings.showUpcomingEvents || !hasReadAccess)
+                    Text("\(Int(settings.eventLookAhead))h")
+                        .font(.system(size: 12, design: .monospaced))
+                        .foregroundColor(.secondary)
+                        .frame(width: 34, alignment: .trailing)
                 }
-                
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Display upcoming calendar events in the notch area with smart prioritization")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    Spacer()
-                }
-            }
-            .padding(.leading, 8)
-        }
-    }
-    
-    private var calendarPreview: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Preview")
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundColor(.secondary)
-            
-            VStack(spacing: 8) {
-                // Next meeting preview
-                calendarEventRow(
-                    title: "Team Standup",
-                    time: "2:00 PM - 2:30 PM",
-                    isNext: true
-                )
-                
-                // Upcoming event preview
-                calendarEventRow(
-                    title: "Project Review",
-                    time: "Tomorrow 10:00 AM",
-                    isNext: false
-                )
-            }
-            .padding()
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
-        }
-    }
-    
-    private func calendarEventRow(title: String, time: String, isNext: Bool) -> some View {
-        HStack(spacing: 8) {
-            Circle()
-                .fill(isNext ? .green : .blue)
-                .frame(width: 8, height: 8)
-            
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.subheadline)
-                    .fontWeight(isNext ? .semibold : .medium)
-                Text(time)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            
-            Spacer()
-            
-            if isNext {
-                Text("Next")
-                    .font(.caption2)
-                    .fontWeight(.semibold)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(.green.opacity(0.2), in: RoundedRectangle(cornerRadius: 4))
-                    .foregroundColor(.green)
             }
         }
     }
-    
-    private var displaySection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Display Options")
-                .font(.headline)
-                .fontWeight(.semibold)
-            
-            VStack(alignment: .leading, spacing: 16) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Look-ahead Window")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                    
-                    HStack {
-                        Slider(value: $settings.eventLookAhead, in: 1...168, step: 1)
-                            .disabled(!settings.showUpcomingEvents || !CalendarService.statusGrantsReadAccess(calendarAccess))
-                        
-                        Text("\(Int(settings.eventLookAhead))h")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .frame(width: 30)
-                    }
-                }
-                
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("How far ahead to look for upcoming events (1 hour to 1 week)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    Spacer()
+
+    private var synchronizationSection: some View {
+        SettingsCard("Synchronization") {
+            SettingRow(
+                title: "Refresh interval",
+                description: "How often to check for calendar updates (1 minute to 1 hour)"
+            ) {
+                HStack(spacing: 10) {
+                    Slider(value: $settings.calendarRefreshInterval, in: 60...3600, step: 60)
+                        .frame(width: 130)
+                        .disabled(!settings.showUpcomingEvents || !hasReadAccess)
+                    Text(formatRefreshInterval(settings.calendarRefreshInterval))
+                        .font(.system(size: 12, design: .monospaced))
+                        .foregroundColor(.secondary)
+                        .frame(width: 34, alignment: .trailing)
                 }
             }
-            .padding(.leading, 8)
-        }
-    }
-    
-    private var refreshSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Synchronization")
-                .font(.headline)
-                .fontWeight(.semibold)
-            
-            VStack(alignment: .leading, spacing: 16) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Refresh Interval")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                    
-                    HStack {
-                        Slider(value: $settings.calendarRefreshInterval, in: 60...3600, step: 60)
-                            .disabled(!settings.showUpcomingEvents || !CalendarService.statusGrantsReadAccess(calendarAccess))
-                        
-                        Text(formatRefreshInterval(settings.calendarRefreshInterval))
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .frame(minWidth: 40)
-                    }
+
+            SettingsRowDivider()
+
+            SettingRow(
+                title: "Manual sync",
+                description: "Fetch the latest events now instead of waiting for the next refresh"
+            ) {
+                Button("Sync Now") {
+                    syncCalendar()
                 }
-                
-                HStack(spacing: 16) {
-                    Button("Sync Now") {
-                        syncCalendar()
-                    }
-                    .disabled(!settings.showUpcomingEvents || !CalendarService.statusGrantsReadAccess(calendarAccess))
-                    .font(.caption)
-                    
-                    Spacer()
-                }
-                
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("How often to check for calendar updates (1 minute to 1 hour)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    Spacer()
-                }
+                .disabled(!settings.showUpcomingEvents || !hasReadAccess)
             }
-            .padding(.leading, 8)
         }
     }
-    
-    private var permissionsSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Calendar Access")
-                .font(.headline)
-                .fontWeight(.semibold)
-            
+
+    private var calendarAccessSection: some View {
+        SettingsCard("Calendar Access") {
             VStack(alignment: .leading, spacing: 12) {
                 PermissionStatusView(
                     title: "Calendar Permission",
                     description: "Required to read upcoming events and meetings",
-                    isGranted: CalendarService.statusGrantsReadAccess(calendarAccess),
+                    isGranted: hasReadAccess,
                     action: {
                         requestCalendarAccess()
                     }
                 )
-                
+
                 if calendarAccess == .denied {
                     HStack {
                         Image(systemName: "exclamationmark.triangle")
                             .foregroundColor(.orange)
-                        
+
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Calendar access was denied")
                                 .font(.caption)
                                 .fontWeight(.medium)
                                 .foregroundColor(.orange)
-                            
+
                             Text("Please enable calendar access in System Settings > Privacy & Security > Calendar")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
-                        
+
                         Spacer()
-                        
+
                         Button("Open Settings") {
                             openPrivacySettings()
                         }
@@ -278,28 +160,29 @@ struct CalendarSettingsPanel: View {
                     HStack {
                         Image(systemName: "questionmark.circle")
                             .foregroundColor(.blue)
-                        
+
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Calendar permission not requested")
                                 .font(.caption)
                                 .fontWeight(.medium)
                                 .foregroundColor(.blue)
-                            
+
                             Text("SmartEdge will request calendar access when you enable event display")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
-                        
+
                         Spacer()
                     }
                     .padding()
                     .background(.blue.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
                 }
             }
-            .padding(.leading, 8)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
         }
     }
-    
+
     private func formatRefreshInterval(_ seconds: Double) -> String {
         let minutes = Int(seconds) / 60
         if minutes < 60 {
@@ -309,11 +192,11 @@ struct CalendarSettingsPanel: View {
             return "\(hours)h"
         }
     }
-    
+
     private func checkCalendarAccess() {
         calendarAccess = EKEventStore.authorizationStatus(for: .event)
     }
-    
+
     private func requestCalendarAccess() {
         // Delegate to the shared CalendarService instead of spinning up a
         // throwaway EKEventStore. That service already handles the macOS
@@ -338,7 +221,7 @@ struct CalendarSettingsPanel: View {
             AppLogger.calendar.info("Calendar manual sync completed")
         }
     }
-    
+
     private func openPrivacySettings() {
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Calendars") {
             NSWorkspace.shared.open(url)
