@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AC0000010000000000ASSET /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AB0000010000000000ASSET /* Assets.xcassets */; };
 		01DB91EDD9A54EE7A7CF8608 /* SmartEdge/Core/Services/SettingsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5126CD50A38E4759B3F2BFD6 /* SmartEdge/Core/Services/SettingsService.swift */; };
 		0438198DFFAD4B1DA9569353 /* SmartEdge/Core/Managers/OverlayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10B8BA9E45047B496D50DD3 /* SmartEdge/Core/Managers/OverlayManager.swift */; };
 		0800B75887D84C98AD578B40 /* SmartEdge/Features/Settings/Panels/MusicPlayerSettingsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1573FCF394742ECA481ADF4 /* SmartEdge/Features/Settings/Panels/MusicPlayerSettingsPanel.swift */; };
@@ -33,7 +34,6 @@
 		3EC495622E5C4C17A0709EF0 /* SmartEdge/Features/Calendar/CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9535B73E8A6344DD88723CFB /* SmartEdge/Features/Calendar/CalendarView.swift */; };
 		415852C48A8445A7905D7004 /* SmartEdge/Shared/Models/MediaModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06112EAEC2CF413091EDEBBF /* SmartEdge/Shared/Models/MediaModels.swift */; };
 		4205D694014F47B7B28903DB /* SmartEdge/Features/Settings/Panels/GeneralSettingsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 777FEE089B5344508C637B7D /* SmartEdge/Features/Settings/Panels/GeneralSettingsPanel.swift */; };
-		F1A2B3C4D5E6F70819203160 /* SmartEdge/Features/Settings/Panels/ProSettingsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2A2B3C4D5E6F70819203161 /* SmartEdge/Features/Settings/Panels/ProSettingsPanel.swift */; };
 		43908EA2D03E4F2CA4BC6AD4 /* SmartEdge/Features/Notch/NotchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15DB1C04BEEC44EC9C98E877 /* SmartEdge/Features/Notch/NotchView.swift */; };
 		480DF3BDF28741B0A8DD6CCE /* SmartEdge/Core/Services/MenuBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3763CE7DB9FC4B4E86011360 /* SmartEdge/Core/Services/MenuBarController.swift */; };
 		4B8ECBD97FDD4BA68B5D3D2D /* SmartEdge/Core/Services/BluetoothService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41AD101E472A4E2F92A5A9D9 /* SmartEdge/Core/Services/BluetoothService.swift */; };
@@ -57,7 +57,6 @@
 		853A24AC5C824F659189BF05 /* SmartEdge/Core/Protocols/NotchWindowManagerProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B9304177E52436B912A9FEC /* SmartEdge/Core/Protocols/NotchWindowManagerProtocol.swift */; };
 		857B9CB287A54F73B2D10E26 /* SmartEdge/Shared/Models/NotchModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9F38D10BB344141938C3761 /* SmartEdge/Shared/Models/NotchModels.swift */; };
 		875B0568994E446F98B9DE2C /* SmartEdge/Shared/Components/NotchAnimation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BA9E2C217584AF3937B7A82 /* SmartEdge/Shared/Components/NotchAnimation.swift */; };
-		A1B2C3D4E5F6708192A3B4C5 /* SmartEdge/Shared/Components/NotchTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F506172839A4B5C6 /* SmartEdge/Shared/Components/NotchTheme.swift */; };
 		8928A2097FAC454DB7C05B48 /* SmartEdge/Features/SystemInfo/ViewModels/SystemInfoViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 239A98F458BE44E89FA8A87F /* SmartEdge/Features/SystemInfo/ViewModels/SystemInfoViewModel.swift */; };
 		8A7EB9244A604222A53CA0BE /* SmartEdge/App/SmartEdgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFCA08F6AFEF43CA80E6D009 /* SmartEdge/App/SmartEdgeApp.swift */; };
 		8D0BCAD4AF8D46A29BB65D34 /* SmartEdge/Shared/Models/AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = F88987F8626A4F37A5C36912 /* SmartEdge/Shared/Models/AppSettings.swift */; };
@@ -72,10 +71,10 @@
 		992BD855463742EFB2085221 /* SmartEdge/Core/Protocols/NotchCoordinatorProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2446B54485E4E2894737B9F /* SmartEdge/Core/Protocols/NotchCoordinatorProtocol.swift */; };
 		99B6CA9209A24E769A112285 /* SmartEdge/Shared/Mocks/PreviewMocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 432BE357939B4D338ACA831E /* SmartEdge/Shared/Mocks/PreviewMocks.swift */; };
 		9A8DE51E3AB34806AA96FC7F /* SmartEdge/Core/Services/SystemService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C98774C467C41BEA78F3302 /* SmartEdge/Core/Services/SystemService.swift */; };
-		E1A2B3C4D5E6F70819203150 /* SmartEdge/Core/Services/StoreService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A2B3C4D5E6F70819203151 /* SmartEdge/Core/Services/StoreService.swift */; };
 		9D62D44567F94C00990D6552 /* SmartEdge/Features/MusicPlayer/Components/MusicVisualizerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04AEB7D5BEA84BE388571A64 /* SmartEdge/Features/MusicPlayer/Components/MusicVisualizerView.swift */; };
 		9F3A1AD9DEE84288BDFC48F1 /* SmartEdge/Shared/Components/NotchShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA862A227FF64CA58BE480D0 /* SmartEdge/Shared/Components/NotchShape.swift */; };
 		A044E749580D4CF4AB257DB8 /* SmartEdge/Shared/Models/PermissionModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 451F7C1489FD48149224F3F1 /* SmartEdge/Shared/Models/PermissionModels.swift */; };
+		A1B2C3D4E5F6708192A3B4C5 /* SmartEdge/Shared/Components/NotchTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F506172839A4B5C6 /* SmartEdge/Shared/Components/NotchTheme.swift */; };
 		A74010C9487B4B88BD5A5B13 /* SmartEdge/Core/Services/WebhookService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDFC5BB246BC4404B90E7799 /* SmartEdge/Core/Services/WebhookService.swift */; };
 		A8F65D67EBCC41DB9CD4A9BB /* SmartEdge/Features/Settings/Panels/ShelfSettingsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0AFF9000F45448BA570F492 /* SmartEdge/Features/Settings/Panels/ShelfSettingsPanel.swift */; };
 		AD0F054451C145968ACD6CF5 /* SmartEdge/Features/Notch/SystemStatusPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F68229DAC7B840A292E55AB9 /* SmartEdge/Features/Notch/SystemStatusPlaceholderView.swift */; };
@@ -90,6 +89,8 @@
 		B8D184CC2E294D68AF75D000 /* SmartEdge/Shared/Models/NowPlayingModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECAE9087FEE7410A8FB2F272 /* SmartEdge/Shared/Models/NowPlayingModel.swift */; };
 		B991FDB95444482B99962646 /* SmartEdge/Core/Services/PomodoroSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AAD802059254A5CB88B0CCB /* SmartEdge/Core/Services/PomodoroSessionStore.swift */; };
 		BD537788345D499791354A77 /* SmartEdge/Features/SystemStatus/Views/SystemStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F01F9C4AAEB4A42A94B111E /* SmartEdge/Features/SystemStatus/Views/SystemStatusView.swift */; };
+		C1A2B3C4D5E6F70819203140 /* SmartEdge/Core/Services/Music/AppleScriptRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A2B3C4D5E6F70819203141 /* SmartEdge/Core/Services/Music/AppleScriptRunner.swift */; };
+		C2A2B3C4D5E6F70819203142 /* SmartEdge/Core/Services/Music/AppleScriptMediaService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2A2B3C4D5E6F70819203143 /* SmartEdge/Core/Services/Music/AppleScriptMediaService.swift */; };
 		C43E9B19EDB746199577141F /* SmartEdge/Core/Coordinators/SystemEventCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03AD58E9E69F4A5988A0A236 /* SmartEdge/Core/Coordinators/SystemEventCoordinator.swift */; };
 		C4A07D9817334B478A611E34 /* SmartEdge/Core/Services/ShelfService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D79107604922492CA36AA5AE /* SmartEdge/Core/Services/ShelfService.swift */; };
 		C64C429E672542C3AD877ADB /* SmartEdge/App/AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA25F5E4CA584ECEB5F77473 /* SmartEdge/App/AppDelegate.swift */; };
@@ -102,13 +103,13 @@
 		D8AD549F74824F7FB8FDEE8C /* SmartEdge/Features/Settings/Components/PermissionRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE0BADD219814A4EBF7C10AE /* SmartEdge/Features/Settings/Components/PermissionRow.swift */; };
 		D9F6EC53CAE44EBC95360896 /* SmartEdge/Core/Protocols/ServiceProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 419B3BB309F1443C8538654B /* SmartEdge/Core/Protocols/ServiceProtocols.swift */; };
 		DE8FB586E5484B55814CDDD3 /* SmartEdge/Core/Services/CalendarService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 675126FF9A794956AA19903E /* SmartEdge/Core/Services/CalendarService.swift */; };
+		E1A2B3C4D5E6F70819203150 /* SmartEdge/Core/Services/StoreService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A2B3C4D5E6F70819203151 /* SmartEdge/Core/Services/StoreService.swift */; };
 		E29888BF8EF94182B304EEC6 /* SmartEdge/Features/Shelf/ShelfViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B35473B4C4E4F6195F1A87D /* SmartEdge/Features/Shelf/ShelfViewModel.swift */; };
 		E5B62631910940C1B79BC762 /* SmartEdge/Features/Shelf/ShelfView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EDF93BE428849C49FCD59A4 /* SmartEdge/Features/Shelf/ShelfView.swift */; };
 		E8804790A84245C5AA66675B /* SmartEdge/Features/Settings/Panels/CalendarSettingsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDD807A40F27416DAEB2830A /* SmartEdge/Features/Settings/Panels/CalendarSettingsPanel.swift */; };
+		F1A2B3C4D5E6F70819203160 /* SmartEdge/Features/Settings/Panels/ProSettingsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2A2B3C4D5E6F70819203161 /* SmartEdge/Features/Settings/Panels/ProSettingsPanel.swift */; };
 		F9880E0C154946ACB7A9EB5A /* SmartEdge/Core/Protocols/MediaServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE35D88D098A40CA8F7ADDD7 /* SmartEdge/Core/Protocols/MediaServiceProtocol.swift */; };
 		FAD949AB7CA444B2A5FF6DF4 /* SmartEdge/Core/Coordinators/AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AA3B867B2664E1CAB912066 /* SmartEdge/Core/Coordinators/AppCoordinator.swift */; };
-		C1A2B3C4D5E6F70819203140 /* SmartEdge/Core/Services/Music/AppleScriptRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A2B3C4D5E6F70819203141 /* SmartEdge/Core/Services/Music/AppleScriptRunner.swift */; };
-		C2A2B3C4D5E6F70819203142 /* SmartEdge/Core/Services/Music/AppleScriptMediaService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2A2B3C4D5E6F70819203143 /* SmartEdge/Core/Services/Music/AppleScriptMediaService.swift */; };
 		FC3C222119574E8FAE041BA4 /* SmartEdge/Shared/Components/ErrorStatePreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = D26AF81DB97742E8B33A57B1 /* SmartEdge/Shared/Components/ErrorStatePreview.swift */; };
 		FCEC450B61FD4FC0A0FEC7D9 /* SmartEdge/Core/Services/NotchWindowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC8B3C5699D84DAAA3980480 /* SmartEdge/Core/Services/NotchWindowManager.swift */; };
 		FD695318CDD54D98AFF310D5 /* SmartEdge/Features/Clipboard/ClipboardContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3CB4943B94A476393D0C64E /* SmartEdge/Features/Clipboard/ClipboardContentView.swift */; };
@@ -154,6 +155,7 @@
 		2A000001000000000000013 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		2A000001000000000000020 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		2A000001000000000000021 /* SmartEdge.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SmartEdge.entitlements; sourceTree = "<group>"; };
+		AB0000010000000000ASSET /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2EBB618882E54F7A9E626340 /* SmartEdge/Features/Settings/Views/SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Settings/Views/SettingsView.swift; sourceTree = "<group>"; };
 		2FDC9208523546C4A7BA14DC /* SmartEdge/Utils/Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Utils/Constants.swift; sourceTree = "<group>"; };
 		3763CE7DB9FC4B4E86011360 /* SmartEdge/Core/Services/MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Services/MenuBarController.swift; sourceTree = "<group>"; };
@@ -168,7 +170,6 @@
 		49186A27BFEE42BB9D1DDE2A /* SmartEdge/Core/Protocols/BatteryServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Protocols/BatteryServiceProtocol.swift; sourceTree = "<group>"; };
 		4AC2BECCEAC74C31B9E744A8 /* SmartEdge/Features/Actions/ActionsContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Actions/ActionsContentView.swift; sourceTree = "<group>"; };
 		4C98774C467C41BEA78F3302 /* SmartEdge/Core/Services/SystemService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Services/SystemService.swift; sourceTree = "<group>"; };
-		E2A2B3C4D5E6F70819203151 /* SmartEdge/Core/Services/StoreService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Services/StoreService.swift; sourceTree = "<group>"; };
 		5126CD50A38E4759B3F2BFD6 /* SmartEdge/Core/Services/SettingsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Services/SettingsService.swift; sourceTree = "<group>"; };
 		5A436517B7574A82AAD5C20F /* SmartEdge/Core/Protocols/CalendarServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Protocols/CalendarServiceProtocol.swift; sourceTree = "<group>"; };
 		5AA3B5794A4D4C56AF969E5D /* SmartEdge/Core/Services/SystemMonitorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Services/SystemMonitorService.swift; sourceTree = "<group>"; };
@@ -183,11 +184,8 @@
 		6B35473B4C4E4F6195F1A87D /* SmartEdge/Features/Shelf/ShelfViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Shelf/ShelfViewModel.swift; sourceTree = "<group>"; };
 		76EBF0412D674834AC062F54 /* SmartEdge/Core/Models/SystemInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Models/SystemInfo.swift; sourceTree = "<group>"; };
 		777FEE089B5344508C637B7D /* SmartEdge/Features/Settings/Panels/GeneralSettingsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Settings/Panels/GeneralSettingsPanel.swift; sourceTree = "<group>"; };
-		F2A2B3C4D5E6F70819203161 /* SmartEdge/Features/Settings/Panels/ProSettingsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Settings/Panels/ProSettingsPanel.swift; sourceTree = "<group>"; };
 		77E317A4B4374F48B227D726 /* SmartEdge/Features/Calendar/CalendarQuickActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Calendar/CalendarQuickActions.swift; sourceTree = "<group>"; };
 		7A5C05855EBE4BB89EBEAF1E /* SmartEdge/Shared/Components/LoadingViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Shared/Components/LoadingViews.swift; sourceTree = "<group>"; };
-		D1A2B3C4D5E6F70819203141 /* SmartEdge/Core/Services/Music/AppleScriptRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Services/Music/AppleScriptRunner.swift; sourceTree = "<group>"; };
-		D2A2B3C4D5E6F70819203143 /* SmartEdge/Core/Services/Music/AppleScriptMediaService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Services/Music/AppleScriptMediaService.swift; sourceTree = "<group>"; };
 		82D53A57F77747DDB343B15C /* SmartEdge/Features/Settings/Panels/PrivacySettingsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Settings/Panels/PrivacySettingsPanel.swift; sourceTree = "<group>"; };
 		86B8159C6F00432D8BFBFDED /* SmartEdge/Features/Settings/Components/NotchPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Settings/Components/NotchPreview.swift; sourceTree = "<group>"; };
 		8AA3B867B2664E1CAB912066 /* SmartEdge/Core/Coordinators/AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Coordinators/AppCoordinator.swift; sourceTree = "<group>"; };
@@ -195,7 +193,6 @@
 		90043C76187F4381B7103DB9 /* SmartEdge/Core/Protocols/AppCoordinatorProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Protocols/AppCoordinatorProtocol.swift; sourceTree = "<group>"; };
 		9535B73E8A6344DD88723CFB /* SmartEdge/Features/Calendar/CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Calendar/CalendarView.swift; sourceTree = "<group>"; };
 		9BA9E2C217584AF3937B7A82 /* SmartEdge/Shared/Components/NotchAnimation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Shared/Components/NotchAnimation.swift; sourceTree = "<group>"; };
-		B1C2D3E4F506172839A4B5C6 /* SmartEdge/Shared/Components/NotchTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Shared/Components/NotchTheme.swift; sourceTree = "<group>"; };
 		9CBAB0E30B2F44899CE30930 /* SmartEdge/Core/Services/EventNotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Services/EventNotificationService.swift; sourceTree = "<group>"; };
 		9E8FD0F5E6D9480FA4239AF8 /* SmartEdge/Core/Services/ServiceContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Services/ServiceContainer.swift; sourceTree = "<group>"; };
 		9E98640E88BB415E961314D4 /* SmartEdge/Core/Services/ClipboardMonitorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Services/ClipboardMonitorService.swift; sourceTree = "<group>"; };
@@ -206,6 +203,7 @@
 		A81A090F536C4D21822095A2 /* SmartEdge/Features/Pomodoro/PomodoroStatisticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Pomodoro/PomodoroStatisticsView.swift; sourceTree = "<group>"; };
 		AA862A227FF64CA58BE480D0 /* SmartEdge/Shared/Components/NotchShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Shared/Components/NotchShape.swift; sourceTree = "<group>"; };
 		B0586A9CD5994E42A38D049A /* SmartEdge/Features/Settings/Components/PermissionStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Settings/Components/PermissionStatusView.swift; sourceTree = "<group>"; };
+		B1C2D3E4F506172839A4B5C6 /* SmartEdge/Shared/Components/NotchTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Shared/Components/NotchTheme.swift; sourceTree = "<group>"; };
 		B2446B54485E4E2894737B9F /* SmartEdge/Core/Protocols/NotchCoordinatorProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Protocols/NotchCoordinatorProtocol.swift; sourceTree = "<group>"; };
 		B6EE71459AB645E1A0A091A3 /* SmartEdge/Features/Settings/SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Settings/SettingsViewModel.swift; sourceTree = "<group>"; };
 		B8622251ABAA42AFAD89996B /* SmartEdge/Features/Notch/NotificationContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Notch/NotificationContentView.swift; sourceTree = "<group>"; };
@@ -217,7 +215,9 @@
 		C9A1EE774E1242EE93F81D2B /* SmartEdge/UI/Overlays/EdgeOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/UI/Overlays/EdgeOverlayView.swift; sourceTree = "<group>"; };
 		CC8B3C5699D84DAAA3980480 /* SmartEdge/Core/Services/NotchWindowManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Services/NotchWindowManager.swift; sourceTree = "<group>"; };
 		CEC31CE8577B4C08873C086F /* SmartEdge/Core/Managers/PermissionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Managers/PermissionManager.swift; sourceTree = "<group>"; };
+		D1A2B3C4D5E6F70819203141 /* SmartEdge/Core/Services/Music/AppleScriptRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Services/Music/AppleScriptRunner.swift; sourceTree = "<group>"; };
 		D26AF81DB97742E8B33A57B1 /* SmartEdge/Shared/Components/ErrorStatePreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Shared/Components/ErrorStatePreview.swift; sourceTree = "<group>"; };
+		D2A2B3C4D5E6F70819203143 /* SmartEdge/Core/Services/Music/AppleScriptMediaService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Services/Music/AppleScriptMediaService.swift; sourceTree = "<group>"; };
 		D3CB4943B94A476393D0C64E /* SmartEdge/Features/Clipboard/ClipboardContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Clipboard/ClipboardContentView.swift; sourceTree = "<group>"; };
 		D48104B83F3443FE9A8A43CB /* SmartEdge/Core/Services/GlobalHotkeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Services/GlobalHotkeyManager.swift; sourceTree = "<group>"; };
 		D681A100AE3A40949F7422DB /* SmartEdge/Features/Settings/Views/SettingsSidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Settings/Views/SettingsSidebar.swift; sourceTree = "<group>"; };
@@ -229,10 +229,13 @@
 		DFCA08F6AFEF43CA80E6D009 /* SmartEdge/App/SmartEdgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/App/SmartEdgeApp.swift; sourceTree = "<group>"; };
 		E122F00AD71648E3B706427B /* SmartEdge/Features/Settings/Panels/DisplayDiagnosticsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Settings/Panels/DisplayDiagnosticsSection.swift; sourceTree = "<group>"; };
 		E1573FCF394742ECA481ADF4 /* SmartEdge/Features/Settings/Panels/MusicPlayerSettingsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Settings/Panels/MusicPlayerSettingsPanel.swift; sourceTree = "<group>"; };
+		E2A2B3C4D5E6F70819203151 /* SmartEdge/Core/Services/StoreService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Services/StoreService.swift; sourceTree = "<group>"; };
 		E4A8CDCA38194441BD1E801D /* SmartEdge/Core/Services/BatteryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Services/BatteryService.swift; sourceTree = "<group>"; };
+		E9CC175F2FE7F1D0001C5393 /* SmartEdge.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = SmartEdge.storekit; sourceTree = "<group>"; };
 		ECAE9087FEE7410A8FB2F272 /* SmartEdge/Shared/Models/NowPlayingModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Shared/Models/NowPlayingModel.swift; sourceTree = "<group>"; };
 		F056A7EBE7C44D22BED8C98D /* SmartEdge/Features/Settings/Panels/IntegrationsSettingsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Settings/Panels/IntegrationsSettingsPanel.swift; sourceTree = "<group>"; };
 		F10B8BA9E45047B496D50DD3 /* SmartEdge/Core/Managers/OverlayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Managers/OverlayManager.swift; sourceTree = "<group>"; };
+		F2A2B3C4D5E6F70819203161 /* SmartEdge/Features/Settings/Panels/ProSettingsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Settings/Panels/ProSettingsPanel.swift; sourceTree = "<group>"; };
 		F68229DAC7B840A292E55AB9 /* SmartEdge/Features/Notch/SystemStatusPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Notch/SystemStatusPlaceholderView.swift; sourceTree = "<group>"; };
 		F88987F8626A4F37A5C36912 /* SmartEdge/Shared/Models/AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Shared/Models/AppSettings.swift; sourceTree = "<group>"; };
 		F8B090DD2C3A4F1094D9A25B /* SmartEdge/Shared/Components/ErrorViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Shared/Components/ErrorViews.swift; sourceTree = "<group>"; };
@@ -258,6 +261,7 @@
 		1A000001000000000000200 = {
 			isa = PBXGroup;
 			children = (
+				E9CC175F2FE7F1D0001C5393 /* SmartEdge.storekit */,
 				2A000001000000000000200 /* SmartEdge */,
 				1A000001000000000000201 /* Products */,
 				E9A786342FDC263800225BFF /* Recovered References */,
@@ -335,6 +339,7 @@
 			children = (
 				2A000001000000000000020 /* Info.plist */,
 				2A000001000000000000021 /* SmartEdge.entitlements */,
+				AB0000010000000000ASSET /* Assets.xcassets */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -545,6 +550,10 @@
 				03AD58E9E69F4A5988A0A236 /* SmartEdge/Core/Coordinators/SystemEventCoordinator.swift */,
 				9BA9E2C217584AF3937B7A82 /* SmartEdge/Shared/Components/NotchAnimation.swift */,
 				B1C2D3E4F506172839A4B5C6 /* SmartEdge/Shared/Components/NotchTheme.swift */,
+				D1A2B3C4D5E6F70819203141 /* SmartEdge/Core/Services/Music/AppleScriptRunner.swift */,
+				D2A2B3C4D5E6F70819203143 /* SmartEdge/Core/Services/Music/AppleScriptMediaService.swift */,
+				E2A2B3C4D5E6F70819203151 /* SmartEdge/Core/Services/StoreService.swift */,
+				F2A2B3C4D5E6F70819203161 /* SmartEdge/Features/Settings/Panels/ProSettingsPanel.swift */,
 			);
 			name = "Recovered References";
 			sourceTree = "<group>";
@@ -607,6 +616,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AC0000010000000000ASSET /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
