@@ -3,6 +3,8 @@ import SwiftUI
 struct SettingsSidebar: View {
     @Binding var selectedPanel: SettingsPanel
     @Binding var searchText: String
+    /// Drives the Pro lock badges — they disappear the moment Pro is purchased.
+    @ObservedObject private var store = ServiceContainer.shared.storeService
     
     private var filteredPanels: [SettingsPanel] {
         if searchText.isEmpty {
@@ -72,8 +74,16 @@ struct SettingsSidebar: View {
                 Text(panel.title)
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(selectedPanel == panel ? .white : .primary)
-                
+
                 Spacer()
+
+                // Pro lock badge — shown on gated panels until purchase.
+                if panel.requiresPro && !store.isPro {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(selectedPanel == panel ? .white.opacity(0.9) : .secondary)
+                        .accessibilityLabel("Pro 잠금")
+                }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)

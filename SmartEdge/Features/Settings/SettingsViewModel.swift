@@ -41,6 +41,17 @@ enum SettingsPanel: String, CaseIterable, Identifiable {
         case .privacy: return "hand.raised"
         }
     }
+
+    /// Panels whose feature is locked behind SmartEdge Pro. The sidebar
+    /// shows a lock badge on these until the user purchases Pro. Matches the
+    /// runtime gate in `AppCoordinator.requirePro` (Shelf / Calendar /
+    /// Pomodoro — Pomodoro has no settings panel of its own).
+    var requiresPro: Bool {
+        switch self {
+        case .shelf, .calendar: return true
+        default: return false
+        }
+    }
 }
 
 @MainActor

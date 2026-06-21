@@ -15,7 +15,8 @@ struct SettingsView: View {
         }, detail: {
             SettingsDetailView(
                 selectedPanel: selectedPanel,
-                viewModel: viewModel
+                viewModel: viewModel,
+                onShowPro: { selectedPanel = .pro }
             )
         })
         .navigationSplitViewStyle(.balanced)
@@ -30,7 +31,8 @@ struct SettingsView: View {
 struct SettingsDetailView: View {
     let selectedPanel: SettingsPanel
     @ObservedObject var viewModel: SettingsViewModel
-    
+    let onShowPro: () -> Void
+
     var body: some View {
         Group {
             switch selectedPanel {
@@ -43,9 +45,13 @@ struct SettingsDetailView: View {
             case .musicPlayer:
                 MusicPlayerSettingsPanel()
             case .calendar:
-                CalendarSettingsPanel()
+                ProLockGate(featureName: "캘린더", onUnlock: onShowPro) {
+                    CalendarSettingsPanel()
+                }
             case .shelf:
-                ShelfSettingsPanel()
+                ProLockGate(featureName: "선반", onUnlock: onShowPro) {
+                    ShelfSettingsPanel()
+                }
             case .systemStatus:
                 SystemStatusSettingsPanel()
             case .integrations:
