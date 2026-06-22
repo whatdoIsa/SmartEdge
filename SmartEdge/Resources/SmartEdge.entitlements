@@ -15,6 +15,20 @@
     <key>com.apple.security.automation.apple-events</key>
     <true/>
 
+    <!-- Per-target Apple Event exception for the two players we control.
+         Verified on macOS 26.3.1: the generic automation entitlement above is
+         NOT sufficient on its own — the sandbox blocks `appleevent-send` to
+         com.apple.Music outright (no TCC prompt ever appears) unless the
+         target is also pinned here. With this list present the sandbox allows
+         the send and the normal Automation consent prompt is shown.
+         MAS note: re-verify in a distribution-signed build before submission;
+         include a review note justifying control of Apple Music / Spotify. -->
+    <key>com.apple.security.temporary-exception.apple-events</key>
+    <array>
+        <string>com.apple.Music</string>
+        <string>com.spotify.client</string>
+    </array>
+
     <!-- Read the user's calendar to surface upcoming events in the notch. -->
     <key>com.apple.security.personal-information.calendars</key>
     <true/>
