@@ -30,10 +30,29 @@ struct ProSettingsPanel: View {
                 }
 
                 footnote
+
+#if DEBUG
+                debugSection
+#endif
             }
             .padding()
         }
     }
+
+#if DEBUG
+    /// DEBUG-only test switch — unlocks every Pro feature without a purchase
+    /// so locked panels (Calendar / Shelf / Pomodoro) can be exercised during
+    /// development. Compiled out of Release / App Store builds.
+    private var debugSection: some View {
+        SettingsCard("개발자 (DEBUG)") {
+            SettingRow(
+                toggle: "Pro 기능 잠금 해제 (테스트)",
+                description: "구매 없이 모든 Pro 기능을 켭니다. 출시 빌드에는 포함되지 않습니다.",
+                isOn: $store.debugProUnlock
+            )
+        }
+    }
+#endif
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 6) {

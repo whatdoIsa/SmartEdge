@@ -23,8 +23,25 @@ final class StoreService: ObservableObject {
     /// .storekit file). Reverse-DNS under the app's bundle ID by convention.
     static let proProductID = "com.smartedge.app.pro"
 
-    /// The single source of truth the rest of the app gates on.
+    /// The single source of truth the rest of the app gates on. Effective
+    /// value = real StoreKit entitlement (OR the DEBUG test override).
     @Published private(set) var isPro = false
+
+    /// Real, verified StoreKit entitlement — kept separate so toggling the
+    /// DEBUG override off restores the true purchase state.
+    private var realEntitled = false
+
+#if DEBUG
+    /// DEBUG-only: unlock all Pro features for testing without a purchase.
+    /// Never compiled into Release/App Store builds. Persisted so it survives
+    /// relaunches during a testing session. Flip it from the Pro settings panel.
+    @Published var debugProUnlock = UserDefaults.standard.bool(forKey: "debugProUnlock") {
+        didSet {
+            UserDefaults.standard.set(debugProUnlock, forKey: "debugProUnlock")
+            recomputeIsPro()
+        }
+    }
+#endif
     /// Loaded product (nil until `loadProducts` succeeds) — drives the
     /// localized price string in the Pro settings panel.
     @Published private(set) var proProduct: Product?
@@ -38,6 +55,9 @@ final class StoreService: ObservableObject {
         // refresh so a purchase that completes on another device / mid-launch
         // isn't missed.
         updatesTask = listenForTransactions()
+        // Apply any persisted DEBUG override immediately so locked features
+        // are testable before the async entitlement refresh completes.
+        recomputeIsPro()
         Task {
             await loadProducts()
             await refreshEntitlement()
@@ -127,7 +147,18 @@ final class StoreService: ObservableObject {
                 entitled = true
             }
         }
-        if isPro != entitled { isPro = entitled }
+        realEntitled = entitled
+        recomputeIsPro()
+    }
+
+    /// Fold the real entitlement and the DEBUG override into the published
+    /// `isPro` the rest of the app gates on.
+    private func recomputeIsPro() {
+        var effective = realEntitled
+#if DEBUG
+        effective = effective || debugProUnlock
+#endif
+        if isPro != effective { isPro = effective }
     }
 
     private func listenForTransactions() -> Task<Void, Never> {
