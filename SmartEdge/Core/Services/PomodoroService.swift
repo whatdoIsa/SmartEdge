@@ -30,12 +30,14 @@ final class PomodoroService: ObservableObject {
             }
         }
 
-        var duration: TimeInterval {
+        /// Default fallback only. The live values come from the user-configured
+        /// `PomodoroService.duration(for:)`.
+        var defaultMinutes: Int {
             switch self {
             case .idle: return 0
-            case .focusing: return 25 * 60
-            case .shortBreak: return 5 * 60
-            case .longBreak: return 15 * 60
+            case .focusing: return 25
+            case .shortBreak: return 5
+            case .longBreak: return 15
             }
         }
     }
@@ -45,6 +47,57 @@ final class PomodoroService: ObservableObject {
     @Published private(set) var isRunning: Bool = false
     @Published private(set) var completedFocusSessions: Int = 0
     @Published private(set) var sessions: [PomodoroSession] = []
+
+    // MARK: - Configurable durations (minutes)
+    //
+    // User-selectable so a session can be 15/25/50 min etc. Persisted in
+    // UserDefaults and clamped to sane bounds. Changing a duration while idle
+    // (or paused on that phase) updates the displayed countdown immediately.
+
+    private enum Keys {
+        static let focus = "pomodoro.focusMinutes"
+        static let shortBreak = "pomodoro.shortBreakMinutes"
+        static let longBreak = "pomodoro.longBreakMinutes"
+    }
+
+    @Published var focusMinutes: Int = Phase.focusing.defaultMinutes {
+        didSet {
+            focusMinutes = min(max(focusMinutes, 1), 120)
+            UserDefaults.standard.set(focusMinutes, forKey: Keys.focus)
+            syncRemainingToPhase()
+        }
+    }
+    @Published var shortBreakMinutes: Int = Phase.shortBreak.defaultMinutes {
+        didSet {
+            shortBreakMinutes = min(max(shortBreakMinutes, 1), 60)
+            UserDefaults.standard.set(shortBreakMinutes, forKey: Keys.shortBreak)
+            syncRemainingToPhase()
+        }
+    }
+    @Published var longBreakMinutes: Int = Phase.longBreak.defaultMinutes {
+        didSet {
+            longBreakMinutes = min(max(longBreakMinutes, 1), 60)
+            UserDefaults.standard.set(longBreakMinutes, forKey: Keys.longBreak)
+            syncRemainingToPhase()
+        }
+    }
+
+    /// Live duration (seconds) for a phase, honoring the user's settings.
+    func duration(for phase: Phase) -> TimeInterval {
+        switch phase {
+        case .idle: return 0
+        case .focusing: return TimeInterval(focusMinutes * 60)
+        case .shortBreak: return TimeInterval(shortBreakMinutes * 60)
+        case .longBreak: return TimeInterval(longBreakMinutes * 60)
+        }
+    }
+
+    /// When not actively counting down, reflect a duration change in the
+    /// displayed `remaining` so the UI updates as the user picks a new length.
+    private func syncRemainingToPhase() {
+        guard !isRunning else { return }
+        remaining = duration(for: phase)
+    }
 
     /// Fired after a focus session is recorded to history (≥30s). Used by
     /// the AppCoordinator to send Slack-style webhook notifications.
@@ -67,6 +120,11 @@ final class PomodoroService: ObservableObject {
         // Application Support file, then clear the key so we don't double-load.
         store.migrateFromUserDefaultsIfNeeded()
         sessions = store.load()
+
+        let defaults = UserDefaults.standard
+        if let f = defaults.object(forKey: Keys.focus) as? Int { focusMinutes = f }
+        if let s = defaults.object(forKey: Keys.shortBreak) as? Int { shortBreakMinutes = s }
+        if let l = defaults.object(forKey: Keys.longBreak) as? Int { longBreakMinutes = l }
     }
 
     deinit {
@@ -103,7 +161,7 @@ final class PomodoroService: ObservableObject {
         recordCompletedFocus()
     }
 
-    var totalDuration: TimeInterval { phase.duration }
+    var totalDuration: TimeInterval { duration(for: phase) }
 
     var progress: Double {
         guard totalDuration > 0 else { return 0 }
@@ -154,7 +212,7 @@ final class PomodoroService: ObservableObject {
             recordCompletedFocus()
         }
         phase = newPhase
-        remaining = newPhase.duration
+        remaining = duration(for: newPhase)
         if newPhase == .focusing {
             currentFocusStartedAt = Date()
         }

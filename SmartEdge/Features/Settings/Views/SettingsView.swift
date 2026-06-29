@@ -82,6 +82,10 @@ struct SettingsDetailView: View {
                 ProLockGate(featureName: "선반", onUnlock: onShowPro) {
                     ShelfSettingsPanel()
                 }
+            case .pomodoro:
+                ProLockGate(featureName: "뽀모도로", onUnlock: onShowPro) {
+                    PomodoroSettingsPanel()
+                }
             case .systemStatus:
                 SystemStatusSettingsPanel()
             case .integrations:

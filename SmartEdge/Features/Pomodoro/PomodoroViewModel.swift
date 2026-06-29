@@ -41,7 +41,7 @@ final class PomodoroViewModel: ObservableObject {
     }
 
     var progress: Double {
-        let total = phase.duration
+        let total = service.duration(for: phase)
         guard total > 0 else { return 0 }
         return 1.0 - max(0, remaining) / total
     }

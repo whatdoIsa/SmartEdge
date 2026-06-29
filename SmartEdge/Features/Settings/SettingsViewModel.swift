@@ -8,6 +8,7 @@ enum SettingsPanel: String, CaseIterable, Identifiable {
     case musicPlayer = "music"
     case calendar = "calendar"
     case shelf = "shelf"
+    case pomodoro = "pomodoro"
     case systemStatus = "status"
     case integrations = "integrations"
     case privacy = "privacy"
@@ -22,6 +23,7 @@ enum SettingsPanel: String, CaseIterable, Identifiable {
         case .musicPlayer: return "Music Player"
         case .calendar: return "Calendar"
         case .shelf: return "Shelf"
+        case .pomodoro: return "Pomodoro"
         case .systemStatus: return "System Status"
         case .integrations: return "Integrations"
         case .privacy: return "Privacy"
@@ -36,6 +38,7 @@ enum SettingsPanel: String, CaseIterable, Identifiable {
         case .musicPlayer: return "music.note"
         case .calendar: return "calendar"
         case .shelf: return "folder"
+        case .pomodoro: return "timer"
         case .systemStatus: return "battery.100"
         case .integrations: return "link"
         case .privacy: return "hand.raised"
@@ -48,7 +51,7 @@ enum SettingsPanel: String, CaseIterable, Identifiable {
     /// Pomodoro — Pomodoro has no settings panel of its own).
     var requiresPro: Bool {
         switch self {
-        case .shelf, .calendar: return true
+        case .shelf, .calendar, .pomodoro: return true
         default: return false
         }
     }
@@ -75,7 +78,7 @@ enum SettingsPanel: String, CaseIterable, Identifiable {
         switch self {
         case .general, .pro: return .top
         case .notchDisplay, .musicPlayer, .systemStatus: return .features
-        case .calendar, .shelf: return .pro
+        case .calendar, .shelf, .pomodoro: return .pro
         case .integrations, .privacy: return .other
         }
     }
