@@ -220,6 +220,20 @@ final class AppCoordinator: ObservableObject, AppCoordinatorProtocol {
         notchViewModel.showShelfPanel()
     }
 
+    /// A file drag entered the notch — surface the pinned Shelf as the target.
+    /// Silent (no upsell) here; the actual drop runs the Pro gate.
+    func prepareShelfForDrop() {
+        guard ServiceContainer.shared.storeService.isPro else { return }
+        notchViewModel.showShelfPanel()
+    }
+
+    /// Files dropped onto the notch overlay → add them to the Shelf.
+    func handleNotchFileDrop(_ urls: [URL]) {
+        guard requirePro("선반") else { return }
+        notchViewModel.showShelfPanel()
+        shelfViewModel.handleDroppedURLs(urls)
+    }
+
     /// Forces the notch to show the clipboard history list.
     func showClipboardHistory() {
         notchViewModel.forceShowContent(.clipboardHistory)

@@ -36,6 +36,15 @@ final class ShelfViewModel: ObservableObject {
     }
     
     // MARK: - Public Methods
+    /// Add files dropped via the AppKit drag destination (the notch overlay).
+    /// Wraps the URLs as item providers so they flow through the same
+    /// validate → copy-to-container → persist pipeline as a SwiftUI drop.
+    func handleDroppedURLs(_ urls: [URL]) {
+        guard !urls.isEmpty else { return }
+        let providers = urls.map { NSItemProvider(object: $0 as NSURL) }
+        _ = handleDrop(providers: providers)
+    }
+
     func handleDrop(providers: [NSItemProvider]) -> Bool {
         guard !providers.isEmpty else { return false }
         

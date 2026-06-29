@@ -51,6 +51,17 @@ final class NotchWindowManager: NSObject, NotchWindowManagerProtocol {
     func setAppCoordinator(_ appCoordinator: AppCoordinator) {
         self.appCoordinator = appCoordinator
     }
+
+    /// A file drag entered the notch — open the (pinned) Shelf so the user
+    /// sees where the drop will land.
+    func handleDragEnteredNotch() {
+        appCoordinator?.prepareShelfForDrop()
+    }
+
+    /// Files were dropped onto the notch overlay — route them to the Shelf.
+    func handleDroppedFiles(_ urls: [URL]) {
+        appCoordinator?.handleNotchFileDrop(urls)
+    }
     
     // MARK: - Protocol Implementation
     func initialize() async throws {
@@ -687,11 +698,35 @@ private class NotchWindowContentView: NSView {
         // so we set up the tracking area here. `updateTrackingAreas` then
         // refreshes it whenever the bounds change.
         setupTrackingArea()
+        // SwiftUI `.onDrop` doesn't receive Finder drags on this borderless,
+        // screen-saver-level overlay window — the drag session is never routed
+        // to the hosting view. Registering the AppKit content view as the
+        // dragging destination is what actually makes the notch accept files.
+        registerForDraggedTypes([.fileURL])
     }
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         setupTrackingArea()
+        registerForDraggedTypes([.fileURL])
+    }
+
+    // MARK: - Drag & drop (files onto the notch → Shelf)
+
+    override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        Task { @MainActor [weak manager] in manager?.handleDragEnteredNotch() }
+        return .copy
+    }
+
+    override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
+        return .copy
+    }
+
+    override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        guard let urls = sender.draggingPasteboard.readObjects(forClasses: [NSURL.self]) as? [URL],
+              !urls.isEmpty else { return false }
+        Task { @MainActor [weak manager] in manager?.handleDroppedFiles(urls) }
+        return true
     }
 
     override func updateTrackingAreas() {
