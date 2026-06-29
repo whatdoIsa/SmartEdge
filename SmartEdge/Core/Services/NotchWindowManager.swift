@@ -309,12 +309,17 @@ final class NotchWindowManager: NSObject, NotchWindowManagerProtocol {
         AppLogger.general.notice(
             "NotchWindowManager: creating window on display \(screen.displayID, privacy: .public) frame=\(NSStringFromRect(initialFrame), privacy: .public)"
         )
-        let window = NSWindow(
+        // A nonactivating panel that can become key — required so the overlay
+        // receives Finder drag-and-drop. A plain borderless NSWindow returns
+        // canBecomeKey=false, and AppKit won't route drag sessions to it
+        // (drops never reach the view, which is why files weren't accepted).
+        let window = NotchPanel(
             contentRect: initialFrame,
-            styleMask: [.borderless],
+            styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
+        window.hidesOnDeactivate = false  // stay visible when the app isn't active
 
         configureNotchWindow(window)
         self.notchWindow = window
@@ -688,6 +693,14 @@ final class NotchWindowManager: NSObject, NotchWindowManagerProtocol {
 }
 
 // MARK: - Custom NSView for Mouse Tracking
+/// Nonactivating panel that can become key — lets the borderless notch overlay
+/// receive Finder drag-and-drop (a plain borderless NSWindow cannot become key,
+/// so AppKit never routes drag sessions to it).
+private final class NotchPanel: NSPanel {
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { false }
+}
+
 private class NotchWindowContentView: NSView {
     /// Weak so the view doesn't keep the manager alive past `cleanup()`.
     weak var manager: NotchWindowManager?
@@ -714,6 +727,7 @@ private class NotchWindowContentView: NSView {
     // MARK: - Drag & drop (files onto the notch → Shelf)
 
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        AppLogger.general.notice("Notch drag: entered")
         Task { @MainActor [weak manager] in manager?.handleDragEnteredNotch() }
         return .copy
     }
@@ -723,8 +737,9 @@ private class NotchWindowContentView: NSView {
     }
 
     override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
-        guard let urls = sender.draggingPasteboard.readObjects(forClasses: [NSURL.self]) as? [URL],
-              !urls.isEmpty else { return false }
+        let urls = (sender.draggingPasteboard.readObjects(forClasses: [NSURL.self]) as? [URL]) ?? []
+        AppLogger.general.notice("Notch drag: performDrop urls=\(urls.count, privacy: .public)")
+        guard !urls.isEmpty else { return false }
         Task { @MainActor [weak manager] in manager?.handleDroppedFiles(urls) }
         return true
     }

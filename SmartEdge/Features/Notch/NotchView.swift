@@ -189,9 +189,9 @@ struct NotchView: View {
                 }
             }
         }
-        .onDrop(of: [.fileURL], isTargeted: $isDropTargeted) { providers in
-            handleDrop(providers)
-        }
+        // Drag-and-drop is handled at the AppKit layer (NotchWindowContentView
+        // as the dragging destination) because SwiftUI `.onDrop` doesn't
+        // receive drags on this borderless overlay panel.
         // Centralized motion language — see NotchAnimation.swift for the
         // rationale behind each curve. Keeping these as separate value
         // bindings (rather than one global animation) lets each state
@@ -203,28 +203,6 @@ struct NotchView: View {
         .animation(NotchAnimation.theme, value: viewModel.pomodoroThemeAccent)
     }
 
-    private func handleDrop(_ providers: [NSItemProvider]) -> Bool {
-        guard !providers.isEmpty else { return false }
-        // Shelf is a Pro feature — gate before accepting the drop. The gate
-        // surfaces a Pro upsell on the notch when locked.
-        guard appCoordinator.requirePro("선반") else { return false }
-        // Immediate visual confirmation that the drop landed. We use
-        // `.fileTransfer` (not `.airdropReceiving`) because AirDrop
-        // receives go through macOS' own UI, not this NotchView onDrop —
-        // anything that hits here is a manual user drag. The follow-up
-        // pulse from `NotchViewModel.handleShelfItemsUpdate` fires once
-        // the items are persisted into the shelf service, giving the
-        // user a "saved" confirmation on top of this "received" beat.
-        let operation = ShelfOperation(
-            type: .fileTransfer,
-            fileName: providers.count == 1 ? nil : "\(providers.count) items",
-            progress: nil,
-            isActive: true
-        )
-        viewModel.forceShowContent(.shelf(operation: operation))
-        return appCoordinator.shelfViewModel.handleDrop(providers: providers)
-    }
-    
     // MARK: - Private Views
 
     /// Composes the visual chrome — material fill, accent-aware border,
