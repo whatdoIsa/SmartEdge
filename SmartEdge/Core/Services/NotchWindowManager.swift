@@ -437,6 +437,20 @@ final class NotchWindowManager: NSObject, NotchWindowManagerProtocol {
                 self.collapseNotch(animated: true)
             }
             .store(in: &cancellables)
+
+        // macOS does not deliver Finder drag-and-drop to windows at
+        // `.screenSaver` level. While the Shelf is pinned open (the drop
+        // target), drop the window to `.floating` so it actually receives
+        // dragged files; restore the always-on-top level when it closes.
+        viewModel.$isShelfPinned
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] pinned in
+                guard let self = self, let window = self.notchWindow else { return }
+                window.level = pinned ? .floating : NSWindow.Level.screenSaver
+                AppLogger.general.notice("Notch level → \(pinned ? "floating(drops)" : "screenSaver", privacy: .public)")
+            }
+            .store(in: &cancellables)
     }
 
     private func calculateNotchFrame(for screen: NSScreen) -> NSRect {
