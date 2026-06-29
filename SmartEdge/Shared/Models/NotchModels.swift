@@ -82,7 +82,7 @@ struct NotchConfiguration {
     // a slim countdown strip hangs *below* the camera and stays glanceable
     // without the full bloom. Collapses back to `default` when the session ends.
     static let pomodoroResting = NotchConfiguration(
-        width: 220,
+        width: 210,
         height: 76,
         cornerRadius: 16,
         animationDuration: 0.35
