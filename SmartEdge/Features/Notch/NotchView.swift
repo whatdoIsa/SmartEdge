@@ -261,11 +261,13 @@ struct NotchView: View {
     /// collapsed, neither shows (the pillow hides behind the hardware notch).
     /// This is what gives the user "system info always on top, music in the
     /// middle" instead of the old one-thing-at-a-time swap.
-    /// The focus-timer panel fills the whole expanded area instead of sitting
-    /// compact at the top.
+    /// Content that fills the whole expanded area (no trailing spacer) instead
+    /// of sitting compact at the top — the focus timer and the music player.
     private var isPomodoroContent: Bool {
-        if case .pomodoro = viewModel.currentContent { return true }
-        return false
+        switch viewModel.currentContent {
+        case .pomodoro, .musicPlayer: return true
+        default: return false
+        }
     }
 
     @ViewBuilder

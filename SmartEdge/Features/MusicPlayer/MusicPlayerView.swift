@@ -70,6 +70,7 @@ struct MusicPlayerView: View {
         // SwiftUI transaction; when isLoading, error, and nowPlaying changed
         // together they could fire three render passes. One `.animation`
         // on a combined hashValue is one pass.
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .animation(.easeInOut(duration: 0.25), value: viewModel.displayStateHash)
         .overlay(alignment: .topTrailing) {
             if let error = viewModel.transientError {
@@ -108,12 +109,11 @@ private struct ActiveMusicPlayerView: View {
     private var displayedDuration: TimeInterval { nowPlaying.duration }
 
     var body: some View {
-        // Single always-visible layout (the notch composite already expands
-        // when music shows, so there's no need for the old hover-to-reveal /
-        // tap-to-expand toggles). Matches the approved redesign mockup:
-        // artwork + title/artist + transport on one row, progress beneath.
-        VStack(spacing: 12) {
-            HStack(spacing: 14) {
+        // Fills the expanded notch: artwork + track info pinned to the top,
+        // progress in the middle, transport controls centered at the bottom —
+        // a full now-playing surface rather than a compact one-liner.
+        VStack(spacing: 0) {
+            HStack(spacing: 16) {
                 AlbumArtworkView(
                     artwork: nowPlaying.artwork,
                     size: NotchTheme.artworkSize,
@@ -121,11 +121,11 @@ private struct ActiveMusicPlayerView: View {
                 )
                 .accessibilityHidden(true)
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 4) {
                     Text(displayedTitle)
-                        .font(.system(size: NotchTheme.trackTitleSize, weight: .medium))
+                        .font(.system(size: NotchTheme.trackTitleSize, weight: .semibold))
                         .foregroundColor(.white)
-                        .lineLimit(1)
+                        .lineLimit(2)
                     Text(displayedArtist)
                         .font(.system(size: NotchTheme.trackArtistSize))
                         .foregroundColor(.white.opacity(NotchTheme.trackArtistOpacity))
@@ -135,19 +135,25 @@ private struct ActiveMusicPlayerView: View {
                 .accessibilityLabel("\(nowPlaying.isPlaying ? "Playing" : "Paused"): \(displayedTitle) by \(displayedArtist)")
 
                 Spacer(minLength: 8)
-
-                TransportControls(
-                    isPlaying: nowPlaying.isPlaying,
-                    isLoading: viewModel.isControlLoading
-                )
             }
+
+            Spacer(minLength: 10)
 
             if let progress = displayedProgress, displayedDuration > 0 {
                 NotchProgressBar(progress: progress, duration: displayedDuration)
+                Spacer(minLength: 10)
             }
+
+            TransportControls(
+                isPlaying: nowPlaying.isPlaying,
+                isLoading: viewModel.isControlLoading
+            )
+            .frame(maxWidth: .infinity)
         }
-        .padding(.horizontal, NotchTheme.contentHorizontalPadding)
-        .padding(.bottom, NotchTheme.contentBottomPadding)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.horizontal, 18)
+        .padding(.top, 8)
+        .padding(.bottom, 14)
     }
 }
 

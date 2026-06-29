@@ -97,23 +97,24 @@ enum NotchTheme {
     // rounded album art, clear title/artist hierarchy, a filled circular
     // play button flanked by light prev/next glyphs, slim progress bar.
 
-    /// Album artwork edge length + corner radius.
-    static let artworkSize: CGFloat = 56
-    static let artworkCornerRadius: CGFloat = 12
+    /// Album artwork edge length + corner radius. Sized so the expanded
+    /// player fills the notch comfortably rather than sitting compact.
+    static let artworkSize: CGFloat = 80
+    static let artworkCornerRadius: CGFloat = 16
 
     /// Track-title / artist text. White-on-black inside the notch; artist is
     /// a dimmed white rather than `.secondary` so it stays legible on pure
     /// black (system secondary resolves too dark there).
-    static let trackTitleSize: CGFloat = 15
-    static let trackArtistSize: CGFloat = 12
+    static let trackTitleSize: CGFloat = 17
+    static let trackArtistSize: CGFloat = 13
     static let trackArtistOpacity: Double = 0.6
 
     /// Transport controls. The play/pause is a filled circle (inverted:
     /// white bg, black glyph) to read as the primary action; prev/next are
     /// plain light glyphs.
-    static let playButtonDiameter: CGFloat = 34
-    static let transportGlyphSize: CGFloat = 18
-    static let playGlyphSize: CGFloat = 16
+    static let playButtonDiameter: CGFloat = 46
+    static let transportGlyphSize: CGFloat = 22
+    static let playGlyphSize: CGFloat = 18
 
     /// Progress bar.
     static let progressBarHeight: CGFloat = 4
