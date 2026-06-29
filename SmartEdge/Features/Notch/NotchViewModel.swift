@@ -137,36 +137,6 @@ final class NotchViewModel: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.5, execute: work)
     }
 
-    /// True while the user has explicitly opened the Shelf list from the menu.
-    /// A pinned shelf ignores hover entirely (so it doesn't collapse when the
-    /// cursor leaves to grab a file) and stays put until closed.
-    @Published private(set) var isShelfPinned = false
-
-    /// Open the full Shelf list and pin it so dragging files in is possible
-    /// without the notch auto-hiding on cursor exit.
-    func showShelfPanel() {
-        pomodoroIntroWorkItem?.cancel()
-        contentTimer?.invalidate()
-        contentTimer = nil
-        isHoverExpanded = false
-        isShelfPinned = true
-        previousContent = currentContent
-        currentContent = .shelf(operation: ShelfOperation(
-            type: .fileTransfer, fileName: nil, progress: nil, isActive: false
-        ))
-        isExpanded = true
-    }
-
-    /// Close the pinned Shelf list and collapse the notch.
-    func closeShelf() {
-        isShelfPinned = false
-        isHoverExpanded = false
-        contentTimer?.invalidate()
-        contentTimer = nil
-        currentContent = .collapsed
-        isExpanded = false
-    }
-
     deinit {
         contentTimer?.invalidate()
         clockTimer?.invalidate()
@@ -670,22 +640,25 @@ final class NotchViewModel: ObservableObject {
             shelfFirstEmissionConsumed = true
             return
         }
-        // When the Shelf list is already open and pinned, a drop updates the
-        // list in place — don't swap to the brief "receiving" transfer view.
-        guard !isShelfPinned else { return }
-
         let previousIDs = Set(previous.map(\.id))
         let added = current.filter { !previousIDs.contains($0.id) }
         guard let latest = added.last else { return }
 
+        // A local drop has already been copied into the Shelf by the time
+        // this fires, so show a brief "added" confirmation (not an in-progress
+        // transfer) and auto-collapse back to the prior content after 2s —
+        // `.shelf` has no autoHideDelay of its own (in-progress AirDrop must
+        // persist until done), so the completed toast schedules its own hide.
+        let label = added.count > 1 ? "\(added.count) files" : latest.name
         let operation = ShelfOperation(
-            type: .fileTransfer,
-            fileName: latest.name,
+            type: .fileAdded,
+            fileName: label,
             progress: nil,
-            isActive: true
+            isActive: false
         )
         let content = NotchContent.shelf(operation: operation)
         requestContent(content, source: .service)
+        scheduleContentHide(after: 2.0)
     }
 
     /// `.scan` guard — see `handleShelfItemsUpdate`. Plain Bool because

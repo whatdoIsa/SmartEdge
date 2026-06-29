@@ -27,6 +27,9 @@ struct ShelfView: View {
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(dropZoneBackground)
+        .onDrop(of: [.fileURL], isTargeted: .constant(false)) { providers in
+            viewModel.handleDrop(providers: providers)
+        }
     }
     
     // MARK: - Private Views

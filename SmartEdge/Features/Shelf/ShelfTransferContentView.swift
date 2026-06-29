@@ -10,6 +10,7 @@ struct ShelfTransferContentView: View {
         case .dragHover: return "tray.and.arrow.down.fill"
         case .fileTransfer: return "arrow.down.doc.fill"
         case .airdropReceiving: return "antenna.radiowaves.left.and.right"
+        case .fileAdded: return "checkmark.circle.fill"
         }
     }
 
@@ -18,7 +19,12 @@ struct ShelfTransferContentView: View {
         case .dragHover: return "Drop to Shelf"
         case .fileTransfer: return "Transferring"
         case .airdropReceiving: return "Receiving"
+        case .fileAdded: return "Added to Shelf"
         }
+    }
+
+    private var tintColor: Color {
+        operation.type == .fileAdded ? .green : .accentColor
     }
 
     private var subtitle: String {
@@ -53,7 +59,7 @@ struct ShelfTransferContentView: View {
     private var iconView: some View {
         ZStack {
             Circle()
-                .fill(.tint.opacity(0.15))
+                .fill(tintColor.opacity(0.15))
                 .frame(width: 36, height: 36)
             iconImage
         }
@@ -64,7 +70,7 @@ struct ShelfTransferContentView: View {
     private var iconImage: some View {
         let base = Image(systemName: iconName)
             .font(.system(size: 16, weight: .medium))
-            .foregroundStyle(.tint)
+            .foregroundStyle(tintColor)
         if #available(macOS 14.0, *) {
             base.symbolEffect(.pulse, options: .repeating, isActive: operation.isActive)
         } else {

@@ -51,17 +51,6 @@ final class NotchWindowManager: NSObject, NotchWindowManagerProtocol {
     func setAppCoordinator(_ appCoordinator: AppCoordinator) {
         self.appCoordinator = appCoordinator
     }
-
-    /// A file drag entered the notch — open the (pinned) Shelf so the user
-    /// sees where the drop will land.
-    func handleDragEnteredNotch() {
-        appCoordinator?.prepareShelfForDrop()
-    }
-
-    /// Files were dropped onto the notch overlay — route them to the Shelf.
-    func handleDroppedFiles(_ urls: [URL]) {
-        appCoordinator?.handleNotchFileDrop(urls)
-    }
     
     // MARK: - Protocol Implementation
     func initialize() async throws {
@@ -210,10 +199,6 @@ final class NotchWindowManager: NSObject, NotchWindowManagerProtocol {
 
         guard let viewModel = notchViewModel else { return }
 
-        // A pinned Shelf stays open regardless of the cursor — ignore hover so
-        // it doesn't collapse when the user moves out to grab a file to drop.
-        if viewModel.isShelfPinned { return }
-
         // While the notch is auto-pulsing (e.g. for a track or play/pause
         // change), AppKit fires a spurious `mouseEntered` because the
         // window grew underneath the cursor. We don't want that to
@@ -309,17 +294,12 @@ final class NotchWindowManager: NSObject, NotchWindowManagerProtocol {
         AppLogger.general.notice(
             "NotchWindowManager: creating window on display \(screen.displayID, privacy: .public) frame=\(NSStringFromRect(initialFrame), privacy: .public)"
         )
-        // A nonactivating panel that can become key — required so the overlay
-        // receives Finder drag-and-drop. A plain borderless NSWindow returns
-        // canBecomeKey=false, and AppKit won't route drag sessions to it
-        // (drops never reach the view, which is why files weren't accepted).
-        let window = NotchPanel(
+        let window = NSWindow(
             contentRect: initialFrame,
-            styleMask: [.borderless, .nonactivatingPanel],
+            styleMask: [.borderless],
             backing: .buffered,
             defer: false
         )
-        window.hidesOnDeactivate = false  // stay visible when the app isn't active
 
         configureNotchWindow(window)
         self.notchWindow = window
@@ -435,20 +415,6 @@ final class NotchWindowManager: NSObject, NotchWindowManagerProtocol {
             .sink { [weak self] _ in
                 guard let self = self, let vm = self.notchViewModel, !vm.isExpanded else { return }
                 self.collapseNotch(animated: true)
-            }
-            .store(in: &cancellables)
-
-        // macOS does not deliver Finder drag-and-drop to windows at
-        // `.screenSaver` level. While the Shelf is pinned open (the drop
-        // target), drop the window to `.floating` so it actually receives
-        // dragged files; restore the always-on-top level when it closes.
-        viewModel.$isShelfPinned
-            .removeDuplicates()
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] pinned in
-                guard let self = self, let window = self.notchWindow else { return }
-                window.level = pinned ? .floating : NSWindow.Level.screenSaver
-                AppLogger.general.notice("Notch level → \(pinned ? "floating(drops)" : "screenSaver", privacy: .public)")
             }
             .store(in: &cancellables)
     }
@@ -707,14 +673,6 @@ final class NotchWindowManager: NSObject, NotchWindowManagerProtocol {
 }
 
 // MARK: - Custom NSView for Mouse Tracking
-/// Nonactivating panel that can become key — lets the borderless notch overlay
-/// receive Finder drag-and-drop (a plain borderless NSWindow cannot become key,
-/// so AppKit never routes drag sessions to it).
-private final class NotchPanel: NSPanel {
-    override var canBecomeKey: Bool { true }
-    override var canBecomeMain: Bool { false }
-}
-
 private class NotchWindowContentView: NSView {
     /// Weak so the view doesn't keep the manager alive past `cleanup()`.
     weak var manager: NotchWindowManager?
@@ -725,37 +683,11 @@ private class NotchWindowContentView: NSView {
         // so we set up the tracking area here. `updateTrackingAreas` then
         // refreshes it whenever the bounds change.
         setupTrackingArea()
-        // SwiftUI `.onDrop` doesn't receive Finder drags on this borderless,
-        // screen-saver-level overlay window — the drag session is never routed
-        // to the hosting view. Registering the AppKit content view as the
-        // dragging destination is what actually makes the notch accept files.
-        registerForDraggedTypes([.fileURL])
     }
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         setupTrackingArea()
-        registerForDraggedTypes([.fileURL])
-    }
-
-    // MARK: - Drag & drop (files onto the notch → Shelf)
-
-    override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
-        AppLogger.general.notice("Notch drag: entered")
-        Task { @MainActor [weak manager] in manager?.handleDragEnteredNotch() }
-        return .copy
-    }
-
-    override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
-        return .copy
-    }
-
-    override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
-        let urls = (sender.draggingPasteboard.readObjects(forClasses: [NSURL.self]) as? [URL]) ?? []
-        AppLogger.general.notice("Notch drag: performDrop urls=\(urls.count, privacy: .public)")
-        guard !urls.isEmpty else { return false }
-        Task { @MainActor [weak manager] in manager?.handleDroppedFiles(urls) }
-        return true
     }
 
     override func updateTrackingAreas() {

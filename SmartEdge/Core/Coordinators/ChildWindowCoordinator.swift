@@ -16,6 +16,8 @@ final class ChildWindowCoordinator {
     private var permissionGuideHandler: WindowCloseHandler?
     private var pomodoroStatsWindow: NSWindow?
     private var pomodoroStatsHandler: WindowCloseHandler?
+    private var shelfWindow: NSWindow?
+    private var shelfHandler: WindowCloseHandler?
 
     /// Opens (or focuses, if already open) the permission guide window.
     /// `onContinue` fires when the user clicks "Continue" inside the view
@@ -60,6 +62,28 @@ final class ChildWindowCoordinator {
             }
         }
         focus(pomodoroStatsWindow)
+    }
+
+    /// Opens (or focuses) the Quick Shelf as a centered standalone window.
+    /// A normal window receives Finder drag-and-drop natively, sidestepping
+    /// the notch overlay's window-level drop restriction.
+    func showShelf(viewModel: ShelfViewModel) {
+        if shelfWindow == nil {
+            let view = ShelfView(viewModel: viewModel)
+            let window = makeWindow(
+                title: "Quick Shelf",
+                content: view
+            ) { [weak self] in
+                self?.shelfWindow = nil
+                self?.shelfHandler = nil
+            } storeHandlerIn: { handler in
+                shelfHandler = handler
+            }
+            window.setContentSize(NSSize(width: 380, height: 460))
+            window.center()
+            shelfWindow = window
+        }
+        focus(shelfWindow)
     }
 
     // MARK: - Private

@@ -244,8 +244,7 @@ struct NotchView: View {
     private var isPomodoroContent: Bool {
         switch viewModel.currentContent {
         case .pomodoro, .musicPlayer: return true
-        case .shelf(let op): return !op.isActive   // pinned list fills; transfer toast doesn't
-        default: return false
+        default: return false   // shelf toast is compact, not a fill
         }
     }
 
@@ -309,20 +308,13 @@ struct NotchView: View {
                 ))
 
         case .shelf(let operation):
-            if operation.isActive {
-                ShelfTransferContentView(operation: operation)
-                    .transition(.asymmetric(
-                        insertion: .scale.combined(with: .opacity),
-                        removal: .opacity
-                    ))
-            } else {
-                ShelfView(viewModel: appCoordinator.shelfViewModel,
-                          onClose: { viewModel.closeShelf() })
-                    .transition(.asymmetric(
-                        insertion: .scale.combined(with: .opacity),
-                        removal: .scale.combined(with: .opacity)
-                    ))
-            }
+            // The full Shelf list lives in its own centered window now; the
+            // notch only ever shows the transient transfer/added toast.
+            ShelfTransferContentView(operation: operation)
+                .transition(.asymmetric(
+                    insertion: .scale.combined(with: .opacity),
+                    removal: .opacity
+                ))
 
         case .systemStatus:
             // System status now lives in the persistent top bar

@@ -213,25 +213,11 @@ final class AppCoordinator: ObservableObject, AppCoordinatorProtocol {
         notchViewModel.forceShowContent(.pomodoro)
     }
 
-    /// Opens the Shelf list in the notch, pinned so files can be dragged in
-    /// without it auto-hiding. Pro-gated like other shelf access.
+    /// Opens the Quick Shelf as a centered standalone window (a normal window
+    /// accepts drag-and-drop natively, unlike the notch overlay). Pro-gated.
     func showShelf() {
         guard requirePro("선반") else { return }
-        notchViewModel.showShelfPanel()
-    }
-
-    /// A file drag entered the notch — surface the pinned Shelf as the target.
-    /// Silent (no upsell) here; the actual drop runs the Pro gate.
-    func prepareShelfForDrop() {
-        guard ServiceContainer.shared.storeService.isPro else { return }
-        notchViewModel.showShelfPanel()
-    }
-
-    /// Files dropped onto the notch overlay → add them to the Shelf.
-    func handleNotchFileDrop(_ urls: [URL]) {
-        guard requirePro("선반") else { return }
-        notchViewModel.showShelfPanel()
-        shelfViewModel.handleDroppedURLs(urls)
+        childWindows.showShelf(viewModel: shelfViewModel)
     }
 
     /// Forces the notch to show the clipboard history list.

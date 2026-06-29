@@ -199,6 +199,9 @@ struct ShelfOperation: Equatable {
         case dragHover
         case fileTransfer
         case airdropReceiving
+        /// A file finished landing in the Shelf — a brief "added" confirmation
+        /// (no spinner), distinct from the in-progress `fileTransfer`.
+        case fileAdded
     }
 }
 
