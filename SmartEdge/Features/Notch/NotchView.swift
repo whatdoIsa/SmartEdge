@@ -288,7 +288,7 @@ struct NotchView: View {
             // the full bloom.
             PomodoroRestingBar(
                 pomodoro: appCoordinator.pomodoroViewModel,
-                topInset: NotchConfiguration.default.height
+                topInset: hardwareNotchInset
             )
         } else {
             contentView
@@ -388,7 +388,10 @@ private struct PomodoroRestingBar: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // Clear the camera housing, then center the countdown in the strip
+            // that hangs below it so it isn't clipped by the notch.
             Spacer().frame(height: topInset)
+            Spacer(minLength: 0)
             HStack(spacing: 6) {
                 Circle()
                     .fill(pomodoro.themeAccent ?? .white)

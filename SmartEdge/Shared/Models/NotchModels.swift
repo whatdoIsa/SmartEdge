@@ -83,8 +83,8 @@ struct NotchConfiguration {
     // without the full bloom. Collapses back to `default` when the session ends.
     static let pomodoroResting = NotchConfiguration(
         width: 200,
-        height: 62,
-        cornerRadius: 14,
+        height: 76,
+        cornerRadius: 16,
         animationDuration: 0.35
     )
 }
