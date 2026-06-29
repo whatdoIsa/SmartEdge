@@ -76,6 +76,17 @@ struct NotchConfiguration {
         cornerRadius: 22,
         animationDuration: 0.35
     )
+
+    // Resting state while a pomodoro session counts down: same width as the
+    // idle notch (so it still tucks behind the camera housing) but taller, so
+    // a slim countdown strip hangs *below* the camera and stays glanceable
+    // without the full bloom. Collapses back to `default` when the session ends.
+    static let pomodoroResting = NotchConfiguration(
+        width: 200,
+        height: 62,
+        cornerRadius: 14,
+        animationDuration: 0.35
+    )
 }
 
 struct NotchPosition {

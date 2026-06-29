@@ -83,10 +83,14 @@ final class NotchViewModel: ObservableObject {
 
     private var clockTimer: Timer?
 
-    /// True while a focus/break session is actively counting down. While set,
-    /// the notch keeps showing the pomodoro timer and music events do NOT take
-    /// over the surface — a running session "owns" the notch until it stops.
-    private var isPomodoroRunning = false
+    /// True while a focus/break session is counting down. Observed by the
+    /// notch view + window manager to show a compact resting countdown bar at
+    /// rest (it does NOT keep the notch fully expanded — the timer settles into
+    /// a small indicator the user can glance at, and hovering still shows music).
+    @Published private(set) var isPomodoroRunning = false
+
+    /// Auto-collapse for the brief "session started" reveal.
+    private var pomodoroIntroWorkItem: DispatchWorkItem?
 
     /// Mirrors the pomodoro view model's themeAccent into this VM so the
     /// notch view can observe a single source of truth.
@@ -102,18 +106,35 @@ final class NotchViewModel: ObservableObject {
                 let wasRunning = self.isPomodoroRunning
                 self.isPomodoroRunning = isRunning
                 if isRunning, !wasRunning {
-                    // Session just started — surface the timer and keep it.
-                    self.forceShowContent(.pomodoro)
+                    self.introducePomodoro()
                 } else if !isRunning, wasRunning {
-                    // Session stopped/finished — release the notch only if it's
-                    // still the pomodoro view that's up.
-                    if case .pomodoro = self.currentContent {
+                    // Session ended — drop the resting bar back to a hidden notch
+                    // unless the user is actively hovering.
+                    self.pomodoroIntroWorkItem?.cancel()
+                    if !self.isHoverExpanded {
                         self.currentContent = .collapsed
                         self.isExpanded = false
                     }
                 }
             }
             .store(in: &cancellables)
+    }
+
+    /// Briefly expand to show the focus timer when a session starts, then settle
+    /// to the compact resting countdown the notch displays while running.
+    private func introducePomodoro() {
+        forceShowContent(.pomodoro)
+        pomodoroIntroWorkItem?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            guard let self = self else { return }
+            guard self.isPomodoroRunning, !self.isHoverExpanded else { return }
+            if case .pomodoro = self.currentContent {
+                self.currentContent = .collapsed
+                self.isExpanded = false
+            }
+        }
+        pomodoroIntroWorkItem = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5, execute: work)
     }
 
     deinit {
@@ -201,21 +222,15 @@ final class NotchViewModel: ObservableObject {
             isHoverExpanded = false
             contentTimer?.invalidate()
             contentTimer = nil
-            // While a pomodoro session is running, exiting hover returns to the
-            // timer instead of collapsing — the session keeps owning the notch.
-            if isPomodoroRunning {
-                currentContent = .pomodoro
-                isExpanded = true
-            } else {
-                currentContent = .collapsed
-                isExpanded = false
-            }
+            // Collapse on hover-exit. If a pomodoro session is running, the
+            // collapsed state renders the compact resting countdown (driven by
+            // `isPomodoroRunning` in the view), not an empty notch.
+            currentContent = .collapsed
+            isExpanded = false
         }
     }
 
     private func preferredContentForHover() -> NotchContent {
-        // A running focus session takes precedence over music on hover.
-        if isPomodoroRunning { return .pomodoro }
 
         // If the system reports a currently-loaded track (paused OR
         // playing — we don't care, the user wants to see it), prefer
@@ -434,9 +449,6 @@ final class NotchViewModel: ObservableObject {
             lastSeenPlayingState = isPlayingNow
         }
         guard !isHoverExpanded else { return }
-        // A running pomodoro owns the notch — never let a track change or
-        // play/pause pulse steal the focus timer off screen.
-        guard !isPomodoroRunning else { return }
         guard pulseEnabled else { return }
         let trackChanged = lastSeenTrackKey != nil && lastSeenTrackKey != newKey
         let firstSeen = lastSeenTrackKey == nil

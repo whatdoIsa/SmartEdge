@@ -92,6 +92,20 @@ struct NotchView: View {
         return 1.0 + actionPulse
     }
 
+    /// Window/content size by state: expanded bloom → pomodoro resting strip
+    /// (taller than idle, hangs a countdown below the camera) → idle pill.
+    private var notchWidth: CGFloat {
+        if viewModel.isExpanded { return NotchConfiguration.expanded.width }
+        if viewModel.isPomodoroRunning { return NotchConfiguration.pomodoroResting.width }
+        return NotchConfiguration.default.width
+    }
+
+    private var notchHeight: CGFloat {
+        if viewModel.isExpanded { return NotchConfiguration.expanded.height }
+        if viewModel.isPomodoroRunning { return NotchConfiguration.pomodoroResting.height }
+        return NotchConfiguration.default.height
+    }
+
     init(viewModel: NotchViewModel) {
         self._viewModel = StateObject(wrappedValue: viewModel)
     }
@@ -144,10 +158,7 @@ struct NotchView: View {
                         .foregroundColor(.white)
                 }
         }
-        .frame(
-            width: viewModel.isExpanded ? NotchConfiguration.expanded.width : NotchConfiguration.default.width,
-            height: viewModel.isExpanded ? NotchConfiguration.expanded.height : NotchConfiguration.default.height
-        )
+        .frame(width: notchWidth, height: notchHeight)
         .accessibilityElement(children: .contain)
         .accessibilityLabel(contentAccessibilityLabel)
         .accessibilityHint(isDropTargeted ? "Drop files to add to shelf" : "")
@@ -271,6 +282,14 @@ struct NotchView: View {
                 contentView
                 Spacer(minLength: 0)
             }
+        } else if viewModel.isPomodoroRunning {
+            // At rest during a focus session: a slim countdown strip hangs
+            // below the camera so the remaining time stays glanceable without
+            // the full bloom.
+            PomodoroRestingBar(
+                pomodoro: appCoordinator.pomodoroViewModel,
+                topInset: NotchConfiguration.default.height
+            )
         } else {
             contentView
         }
@@ -355,6 +374,35 @@ struct NotchView: View {
         case .settings:
             EmptyView()
         }
+    }
+}
+
+// MARK: - Pomodoro Resting Bar
+
+/// Compact countdown shown in the collapsed notch while a focus session runs.
+/// A `topInset` clears the camera housing; the time + phase dot sit in the
+/// strip that hangs just below it. Observes the pomodoro VM so it ticks live.
+private struct PomodoroRestingBar: View {
+    @ObservedObject var pomodoro: PomodoroViewModel
+    let topInset: CGFloat
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Spacer().frame(height: topInset)
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(pomodoro.themeAccent ?? .white)
+                    .frame(width: 6, height: 6)
+                Text(pomodoro.formattedRemaining)
+                    .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                    .foregroundColor(.white)
+                    .monospacedDigit()
+            }
+            .frame(maxWidth: .infinity)
+            Spacer(minLength: 0)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(pomodoro.phaseTitle) \(pomodoro.formattedRemaining)")
     }
 }
 

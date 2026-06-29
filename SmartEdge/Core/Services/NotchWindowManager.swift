@@ -36,6 +36,8 @@ final class NotchWindowManager: NSObject, NotchWindowManagerProtocol {
         static let defaultNotchHeight: CGFloat = NotchConfiguration.default.height
         static let expandedNotchWidth: CGFloat = NotchConfiguration.expanded.width
         static let expandedNotchHeight: CGFloat = NotchConfiguration.expanded.height
+        static let restingNotchWidth: CGFloat = NotchConfiguration.pomodoroResting.width
+        static let restingNotchHeight: CGFloat = NotchConfiguration.pomodoroResting.height
         static let cornerRadius: CGFloat = 16
         static let notchTopOffset: CGFloat = 0 // Align with actual MacBook notch
     }
@@ -403,6 +405,18 @@ final class NotchWindowManager: NSObject, NotchWindowManagerProtocol {
                 }
             }
             .store(in: &cancellables)
+
+        // A pomodoro session toggling on/off changes the resting size (a
+        // collapsed notch grows a countdown strip). Re-apply the collapsed
+        // frame when that happens while not expanded.
+        viewModel.$isPomodoroRunning
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self = self, let vm = self.notchViewModel, !vm.isExpanded else { return }
+                self.collapseNotch(animated: true)
+            }
+            .store(in: &cancellables)
     }
 
     private func calculateNotchFrame(for screen: NSScreen) -> NSRect {
@@ -608,12 +622,44 @@ final class NotchWindowManager: NSObject, NotchWindowManagerProtocol {
         return NSRect(x: x, y: y, width: width, height: height)
     }
     
+    /// Resting frame while a pomodoro session counts down: same width as the
+    /// idle notch but taller, top-anchored so the extra height hangs *below*
+    /// the camera housing where the countdown strip is visible.
+    private func calculateRestingFrame(for screen: NSScreen) -> NSRect {
+        let screenFrame = screen.frame
+        let width = Constants.restingNotchWidth
+        let height = Constants.restingNotchHeight
+
+        let notchHeight: CGFloat
+        if #available(macOS 12.0, *) {
+            notchHeight = screen.safeAreaInsets.top
+        } else {
+            notchHeight = 0
+        }
+
+        let menuBarHeight = NSStatusBar.system.thickness
+        let topY: CGFloat
+        if notchHeight > 0 {
+            topY = screenFrame.origin.y + screenFrame.height - height
+        } else {
+            topY = screenFrame.origin.y + screenFrame.height - height - menuBarHeight - Constants.notchTopOffset
+        }
+
+        let x = screenFrame.origin.x + (screenFrame.width - width) / 2
+        return NSRect(x: x, y: topY, width: width, height: height)
+    }
+
     func collapseNotch(animated: Bool = true) {
         guard let window = notchWindow,
               let screen = preferredNotchScreen() else { return }
 
-        let collapsedFrame = calculateNotchFrame(for: screen)
-        
+        // A running pomodoro session uses the taller resting frame so its
+        // countdown strip stays visible at rest.
+        let pomodoroResting = notchViewModel?.isPomodoroRunning ?? false
+        let collapsedFrame = pomodoroResting
+            ? calculateRestingFrame(for: screen)
+            : calculateNotchFrame(for: screen)
+
         if animated {
             NSAnimationContext.runAnimationGroup { context in
                 context.duration = 0.25
