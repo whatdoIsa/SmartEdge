@@ -2,11 +2,13 @@ import SwiftUI
 
 struct ShelfView: View {
     @StateObject private var viewModel: ShelfViewModel
-    private let onClose: (() -> Void)?
+    @State private var hoveredItemID: ShelfItem.ID?
+    @State private var isDropTargeted = false
 
-    init(viewModel: ShelfViewModel, onClose: (() -> Void)? = nil) {
+    private let accent = NotchTheme.brandCoral
+
+    init(viewModel: ShelfViewModel) {
         self._viewModel = StateObject(wrappedValue: viewModel)
-        self.onClose = onClose
     }
 
     init() {
@@ -15,182 +17,186 @@ struct ShelfView: View {
             shelfService: PreviewMockShelfService(),
             fileSharingService: PreviewMockFileSharingService()
         ))
-        self.onClose = nil
     }
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 0) {
             shelfHeader
-            shelfContent
+            Divider()
+            content
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(dropZoneBackground)
-        .onDrop(of: [.fileURL], isTargeted: .constant(false)) { providers in
+        .background(Color(NSColor.windowBackgroundColor))
+        .overlay {
+            if isDropTargeted {
+                RoundedRectangle(cornerRadius: 14)
+                    .strokeBorder(accent, lineWidth: 2)
+                    .padding(2)
+            }
+        }
+        .onDrop(of: [.fileURL], isTargeted: $isDropTargeted) { providers in
             viewModel.handleDrop(providers: providers)
         }
+        .animation(.easeInOut(duration: 0.15), value: isDropTargeted)
     }
-    
-    // MARK: - Private Views
+
+    // MARK: - Header
+
     private var shelfHeader: some View {
-        HStack {
+        HStack(spacing: 8) {
             Image(systemName: "tray.2.fill")
-                .font(.title2)
-                .foregroundStyle(.primary)
-            
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(accent)
+
             Text("Quick Shelf")
-                .font(.headline)
-                .fontWeight(.medium)
+                .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(.primary)
-            
-            Spacer()
-            
-            if viewModel.isProcessing {
-                ProgressView()
-                    .scaleEffect(0.8)
+
+            if !viewModel.shelfItems.isEmpty {
+                Text("\(viewModel.shelfItems.count)")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(accent)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 1)
+                    .background(accent.opacity(0.12), in: Capsule())
             }
-            
+
+            Spacer(minLength: 0)
+
+            if viewModel.isProcessing {
+                ProgressView().scaleEffect(0.6)
+            }
+
             Button(action: viewModel.clearAllItems) {
                 Image(systemName: "trash")
-                    .font(.caption)
+                    .font(.system(size: 13))
                     .foregroundStyle(.secondary)
             }
-            .buttonStyle(PlainButtonStyle())
+            .buttonStyle(.plain)
             .disabled(viewModel.shelfItems.isEmpty)
-
-            if let onClose {
-                Button(action: onClose) {
-                    Image(systemName: "xmark")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(PlainButtonStyle())
-                .accessibilityLabel("선반 닫기")
-            }
+            .help("Clear all")
+            .accessibilityLabel("Clear all")
         }
+        .padding(.horizontal, 16)
+        // Small top inset so the header sits just below the overlaid
+        // traffic-light controls (full-size content view runs under the
+        // transparent title bar) without a large gap.
+        .padding(.top, 8)
+        .padding(.bottom, 12)
     }
-    
-    private var shelfContent: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: 8) {
-                if viewModel.shelfItems.isEmpty {
-                    emptyShelfView
-                } else {
+
+    // MARK: - Content
+
+    @ViewBuilder
+    private var content: some View {
+        if viewModel.shelfItems.isEmpty {
+            emptyState
+        } else {
+            ScrollView {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 92), spacing: 12)], spacing: 12) {
                     ForEach(viewModel.shelfItems) { item in
-                        shelfItemView(item)
+                        shelfTile(item)
                     }
                 }
+                .padding(16)
             }
-            .padding(.horizontal, 4)
         }
-        .frame(height: 80)
     }
-    
-    private var emptyShelfView: some View {
-        VStack(spacing: 4) {
+
+    private var emptyState: some View {
+        VStack(spacing: 10) {
             Image(systemName: "square.and.arrow.down.on.square")
-                .font(.title2)
-                .foregroundStyle(.secondary)
-            
+                .font(.system(size: 34, weight: .light))
+                .foregroundStyle(accent.opacity(0.7))
             Text("Drop files here")
-                .font(.caption)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.primary)
+            Text("Keep files handy, then drag them out anywhere.")
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
         }
-        .frame(width: 120, height: 60)
-        .background(.secondary.opacity(0.1))
-        .cornerRadius(8)
-        .overlay {
-            RoundedRectangle(cornerRadius: 8)
-                .strokeBorder(.secondary.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
-        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(24)
     }
-    
-    private func shelfItemView(_ item: ShelfItem) -> some View {
-        VStack(spacing: 4) {
-            // File icon
-            Group {
-                if let thumbnail = item.thumbnail {
-                    Image(nsImage: thumbnail)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } else {
-                    Image(systemName: item.systemIcon)
-                        .font(.title)
-                        .foregroundStyle(item.iconColor)
+
+    // MARK: - Tile
+
+    private func shelfTile(_ item: ShelfItem) -> some View {
+        VStack(spacing: 6) {
+            ZStack(alignment: .topTrailing) {
+                Group {
+                    if let thumbnail = item.thumbnail {
+                        Image(nsImage: thumbnail)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } else {
+                        Image(systemName: item.systemIcon)
+                            .font(.system(size: 26))
+                            .foregroundStyle(accent)
+                    }
+                }
+                .frame(width: 84, height: 64)
+                .background(Color.primary.opacity(0.06))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 10)
+                        .strokeBorder(item.isSelected ? accent : Color.clear, lineWidth: 2)
+                }
+
+                if hoveredItemID == item.id {
+                    Button {
+                        viewModel.removeItem(item)
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 16))
+                            .symbolRenderingMode(.palette)
+                            .foregroundStyle(.white, .black.opacity(0.55))
+                    }
+                    .buttonStyle(.plain)
+                    .offset(x: 6, y: -6)
+                    .accessibilityLabel("Remove \(item.name)")
                 }
             }
-            .frame(width: 40, height: 40)
-            .background(.quaternary)
-            .cornerRadius(6)
-            
-            // File name
+
             Text(item.name)
-                .font(.caption2)
-                .lineLimit(2)
-                .multilineTextAlignment(.center)
+                .font(.system(size: 11))
+                .lineLimit(1)
+                .truncationMode(.middle)
                 .foregroundStyle(.primary)
-                .frame(width: 60)
+                .frame(width: 84)
         }
-        .frame(width: 64, height: 70)
-        .background(item.isSelected ? Color.accentColor.opacity(0.2) : Color.clear)
-        .cornerRadius(8)
-        .overlay {
-            if item.isSelected {
-                RoundedRectangle(cornerRadius: 8)
-                    .strokeBorder(Color.accentColor, lineWidth: 1)
-            }
+        .contentShape(Rectangle())
+        .onHover { hovering in
+            hoveredItemID = hovering ? item.id : (hoveredItemID == item.id ? nil : hoveredItemID)
         }
-        .onTapGesture {
-            viewModel.selectItem(item)
-        }
-        .onDrag {
-            viewModel.createDragItem(for: item)
-        }
-        .contextMenu {
-            contextMenuForItem(item)
-        }
-        .animation(.easeInOut(duration: 0.2), value: item.isSelected)
-        // Accessibility: bundle the thumbnail + name into a single
-        // announcement instead of letting VoiceOver read "image" +
-        // "filename" separately. Selection state is exposed so a
-        // VoiceOver user can audit what's currently selected without
-        // having to swipe through each item.
+        .onTapGesture(count: 2) { viewModel.openItem(item) }
+        .onTapGesture { viewModel.selectItem(item) }
+        .onDrag { viewModel.createDragItem(for: item) }
+        .contextMenu { contextMenuForItem(item) }
+        .animation(.easeInOut(duration: 0.15), value: hoveredItemID)
+        .animation(.easeInOut(duration: 0.15), value: item.isSelected)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(item.name)
         .accessibilityValue(item.isSelected ? "Selected" : "")
-        .accessibilityHint("Double-tap to select. Drag to move. Use the context menu to share or remove.")
+        .accessibilityHint("Double-tap to open. Drag to move. Use the context menu to share or remove.")
     }
-    
+
     private func contextMenuForItem(_ item: ShelfItem) -> some View {
         Group {
-            Button("Open") {
-                viewModel.openItem(item)
-            }
-
-            Button("Show in Finder") {
-                viewModel.showInFinder(item)
-            }
+            Button("Open") { viewModel.openItem(item) }
+            Button("Show in Finder") { viewModel.showInFinder(item) }
 
             if item.fileType == .document || item.fileType == .image {
-                Button("Quick Look") {
-                    viewModel.quickLookItem(item)
-                }
+                Button("Quick Look") { viewModel.quickLookItem(item) }
             }
 
             Divider()
 
-            // Share submenu — AirDrop is the user's most common path on
-            // macOS for "send this file to my phone / a nearby Mac" so it
-            // sits at the top. The other entries route through the same
-            // FileSharingService façade so adding/removing options here is
-            // a one-line change.
-            //
-            // AirDrop is gated on `enableAirDropIntegration` from settings
-            // — read straight from UserDefaults (default true) instead of
-            // routing through SettingsViewModel because this menu doesn't
-            // otherwise depend on the settings VM and adding it would
-            // bloat the EnvironmentObject chain for every shelf view.
+            // AirDrop is the most common "send to my phone / nearby Mac" path on
+            // macOS, so it leads. Gated on the settings toggle (default true),
+            // read straight from UserDefaults to avoid pulling SettingsViewModel
+            // into every shelf view.
             Menu("Share") {
                 if UserDefaults.standard.object(forKey: SettingsKeys.enableAirDropIntegration) as? Bool ?? true {
                     Button {
@@ -213,46 +219,18 @@ struct ShelfView: View {
 
             Divider()
 
-            Button("Remove from Shelf") {
+            Button("Remove from Shelf", role: .destructive) {
                 viewModel.removeItem(item)
             }
         }
-    }
-    
-    private var dropZoneBackground: some View {
-        RoundedRectangle(cornerRadius: 12)
-            .fill(.ultraThinMaterial)
-            .overlay {
-                if viewModel.isDropTargeted {
-                    RoundedRectangle(cornerRadius: 12)
-                        .strokeBorder(.blue, lineWidth: 2)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(.blue.opacity(0.1))
-                        )
-                }
-            }
-            .animation(.easeInOut(duration: 0.2), value: viewModel.isDropTargeted)
     }
 }
 
 // MARK: - Preview
 #Preview {
-    VStack(spacing: 20) {
-        // Empty shelf
-        ShelfView(viewModel: ShelfViewModel(
-            shelfService: PreviewMockShelfService(),
-            fileSharingService: PreviewMockFileSharingService()
-        ))
-        
-        // Shelf with items  
-        ShelfView(viewModel: ShelfViewModel(
-            shelfService: PreviewMockShelfService(),
-            fileSharingService: PreviewMockFileSharingService()
-        ))
-    }
-    .frame(width: 500, height: 300)
-    .background(.ultraThinMaterial)
-    .cornerRadius(16)
+    ShelfView(viewModel: ShelfViewModel(
+        shelfService: PreviewMockShelfService(),
+        fileSharingService: PreviewMockFileSharingService()
+    ))
+    .frame(width: 380, height: 460)
 }
-

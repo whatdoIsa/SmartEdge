@@ -80,6 +80,12 @@ final class ChildWindowCoordinator {
                 shelfHandler = handler
             }
             window.setContentSize(NSSize(width: 380, height: 460))
+            // Seamless header: hide the native title (the view draws its own
+            // "Quick Shelf" header) and let content run under a transparent
+            // title bar, keeping just the traffic-light controls.
+            window.titleVisibility = .hidden
+            window.titlebarAppearsTransparent = true
+            window.styleMask.insert(.fullSizeContentView)
             window.center()
             shelfWindow = window
         }
