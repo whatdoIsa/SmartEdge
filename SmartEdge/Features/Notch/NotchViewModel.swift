@@ -231,6 +231,12 @@ final class NotchViewModel: ObservableObject {
     }
 
     private func preferredContentForHover() -> NotchContent {
+        // If the focus timer panel is open (e.g. just shown from the menu),
+        // keep it on hover so its play / skip controls stay reachable instead
+        // of flipping to music. A *running* session rests as the compact
+        // countdown (currentContent == .collapsed), so hovering then correctly
+        // falls through to music below.
+        if case .pomodoro = currentContent { return .pomodoro }
 
         // If the system reports a currently-loaded track (paused OR
         // playing — we don't care, the user wants to see it), prefer

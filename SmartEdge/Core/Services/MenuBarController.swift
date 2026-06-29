@@ -59,8 +59,8 @@ final class MenuBarController: NSObject {
         menu.addItem(NSMenuItem.separator())
 
         let pomodoro = NSMenuItem(
-            title: "Start Focus Timer",
-            action: #selector(togglePomodoro),
+            title: "Show Focus Timer",
+            action: #selector(openFocusTimer),
             keyEquivalent: ""
         )
         pomodoro.target = self
@@ -130,24 +130,11 @@ final class MenuBarController: NSObject {
                 self.updateToggleTitle(isVisible: visible)
             }
             .store(in: &cancellables)
-
-        coordinator.pomodoroViewModel.$isRunning
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] running in
-                guard let self = self else { return }
-                self.updatePomodoroTitle(isRunning: running)
-            }
-            .store(in: &cancellables)
     }
 
     private func updateToggleTitle(isVisible: Bool) {
         guard let item = statusItem?.menu?.item(withTag: MenuTag.toggleNotch.rawValue) else { return }
         item.title = isVisible ? "Hide Notch" : "Show Notch"
-    }
-
-    private func updatePomodoroTitle(isRunning: Bool) {
-        guard let item = statusItem?.menu?.item(withTag: MenuTag.togglePomodoro.rawValue) else { return }
-        item.title = isRunning ? "Pause Focus Timer" : "Start Focus Timer"
     }
 
     // MARK: - Menu Actions
@@ -178,10 +165,10 @@ final class MenuBarController: NSObject {
         appCoordinator?.showPermissionGuide()
     }
 
-    @objc private func togglePomodoro() {
-        guard let coordinator = appCoordinator else { return }
-        coordinator.pomodoroViewModel.toggle()
-        coordinator.showPomodoro()
+    @objc private func openFocusTimer() {
+        // Just surface the timer view in the notch — the user starts it with
+        // the play button there, rather than the menu auto-starting it.
+        appCoordinator?.showPomodoro()
     }
 
     @objc private func openPomodoroStatistics() {
