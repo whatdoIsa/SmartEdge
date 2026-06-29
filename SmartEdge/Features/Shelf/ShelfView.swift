@@ -2,19 +2,22 @@ import SwiftUI
 
 struct ShelfView: View {
     @StateObject private var viewModel: ShelfViewModel
-    
-    init(viewModel: ShelfViewModel) {
+    private let onClose: (() -> Void)?
+
+    init(viewModel: ShelfViewModel, onClose: (() -> Void)? = nil) {
         self._viewModel = StateObject(wrappedValue: viewModel)
+        self.onClose = onClose
     }
-    
+
     init() {
         // Default initializer for preview and testing
         self._viewModel = StateObject(wrappedValue: ShelfViewModel(
             shelfService: PreviewMockShelfService(),
             fileSharingService: PreviewMockFileSharingService()
         ))
+        self.onClose = nil
     }
-    
+
     var body: some View {
         VStack(spacing: 12) {
             shelfHeader
@@ -22,6 +25,7 @@ struct ShelfView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(dropZoneBackground)
         .onDrop(of: [.fileURL], isTargeted: .constant(false)) { providers in
             viewModel.handleDrop(providers: providers)
@@ -54,6 +58,16 @@ struct ShelfView: View {
             }
             .buttonStyle(PlainButtonStyle())
             .disabled(viewModel.shelfItems.isEmpty)
+
+            if let onClose {
+                Button(action: onClose) {
+                    Image(systemName: "xmark")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(PlainButtonStyle())
+                .accessibilityLabel("선반 닫기")
+            }
         }
     }
     

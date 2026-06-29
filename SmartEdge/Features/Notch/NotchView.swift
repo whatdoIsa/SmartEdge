@@ -266,6 +266,7 @@ struct NotchView: View {
     private var isPomodoroContent: Bool {
         switch viewModel.currentContent {
         case .pomodoro, .musicPlayer: return true
+        case .shelf(let op): return !op.isActive   // pinned list fills; transfer toast doesn't
         default: return false
         }
     }
@@ -337,7 +338,8 @@ struct NotchView: View {
                         removal: .opacity
                     ))
             } else {
-                ShelfView(viewModel: appCoordinator.shelfViewModel)
+                ShelfView(viewModel: appCoordinator.shelfViewModel,
+                          onClose: { viewModel.closeShelf() })
                     .transition(.asymmetric(
                         insertion: .scale.combined(with: .opacity),
                         removal: .scale.combined(with: .opacity)

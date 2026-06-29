@@ -56,6 +56,14 @@ final class MenuBarController: NSObject {
         quickActions.target = self
         menu.addItem(quickActions)
 
+        let shelf = NSMenuItem(
+            title: "Show Shelf",
+            action: #selector(openShelf),
+            keyEquivalent: ""
+        )
+        shelf.target = self
+        menu.addItem(shelf)
+
         menu.addItem(NSMenuItem.separator())
 
         let pomodoro = NSMenuItem(
@@ -163,6 +171,10 @@ final class MenuBarController: NSObject {
 
     @objc private func openPermissions() {
         appCoordinator?.showPermissionGuide()
+    }
+
+    @objc private func openShelf() {
+        appCoordinator?.showShelf()
     }
 
     @objc private func openFocusTimer() {

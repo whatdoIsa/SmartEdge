@@ -137,6 +137,36 @@ final class NotchViewModel: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.5, execute: work)
     }
 
+    /// True while the user has explicitly opened the Shelf list from the menu.
+    /// A pinned shelf ignores hover entirely (so it doesn't collapse when the
+    /// cursor leaves to grab a file) and stays put until closed.
+    @Published private(set) var isShelfPinned = false
+
+    /// Open the full Shelf list and pin it so dragging files in is possible
+    /// without the notch auto-hiding on cursor exit.
+    func showShelfPanel() {
+        pomodoroIntroWorkItem?.cancel()
+        contentTimer?.invalidate()
+        contentTimer = nil
+        isHoverExpanded = false
+        isShelfPinned = true
+        previousContent = currentContent
+        currentContent = .shelf(operation: ShelfOperation(
+            type: .fileTransfer, fileName: nil, progress: nil, isActive: false
+        ))
+        isExpanded = true
+    }
+
+    /// Close the pinned Shelf list and collapse the notch.
+    func closeShelf() {
+        isShelfPinned = false
+        isHoverExpanded = false
+        contentTimer?.invalidate()
+        contentTimer = nil
+        currentContent = .collapsed
+        isExpanded = false
+    }
+
     deinit {
         contentTimer?.invalidate()
         clockTimer?.invalidate()
@@ -640,6 +670,10 @@ final class NotchViewModel: ObservableObject {
             shelfFirstEmissionConsumed = true
             return
         }
+        // When the Shelf list is already open and pinned, a drop updates the
+        // list in place — don't swap to the brief "receiving" transfer view.
+        guard !isShelfPinned else { return }
+
         let previousIDs = Set(previous.map(\.id))
         let added = current.filter { !previousIDs.contains($0.id) }
         guard let latest = added.last else { return }

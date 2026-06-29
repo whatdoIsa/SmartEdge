@@ -199,6 +199,10 @@ final class NotchWindowManager: NSObject, NotchWindowManagerProtocol {
 
         guard let viewModel = notchViewModel else { return }
 
+        // A pinned Shelf stays open regardless of the cursor — ignore hover so
+        // it doesn't collapse when the user moves out to grab a file to drop.
+        if viewModel.isShelfPinned { return }
+
         // While the notch is auto-pulsing (e.g. for a track or play/pause
         // change), AppKit fires a spurious `mouseEntered` because the
         // window grew underneath the cursor. We don't want that to

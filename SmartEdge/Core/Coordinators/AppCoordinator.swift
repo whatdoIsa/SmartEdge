@@ -213,6 +213,13 @@ final class AppCoordinator: ObservableObject, AppCoordinatorProtocol {
         notchViewModel.forceShowContent(.pomodoro)
     }
 
+    /// Opens the Shelf list in the notch, pinned so files can be dragged in
+    /// without it auto-hiding. Pro-gated like other shelf access.
+    func showShelf() {
+        guard requirePro("선반") else { return }
+        notchViewModel.showShelfPanel()
+    }
+
     /// Forces the notch to show the clipboard history list.
     func showClipboardHistory() {
         notchViewModel.forceShowContent(.clipboardHistory)
