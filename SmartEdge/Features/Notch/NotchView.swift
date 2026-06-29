@@ -261,6 +261,13 @@ struct NotchView: View {
     /// collapsed, neither shows (the pillow hides behind the hardware notch).
     /// This is what gives the user "system info always on top, music in the
     /// middle" instead of the old one-thing-at-a-time swap.
+    /// The focus-timer panel fills the whole expanded area instead of sitting
+    /// compact at the top.
+    private var isPomodoroContent: Bool {
+        if case .pomodoro = viewModel.currentContent { return true }
+        return false
+    }
+
     @ViewBuilder
     private var expandedLayout: some View {
         if viewModel.isExpanded {
@@ -280,7 +287,12 @@ struct NotchView: View {
                 // Main content (music, calendar, …) sits below the notch band
                 // so it's never clipped by the camera cutout.
                 contentView
-                Spacer(minLength: 0)
+                // Most content is compact and top-aligned with empty space
+                // below. The pomodoro timer instead fills the whole area, so
+                // it skips the trailing spacer.
+                if !isPomodoroContent {
+                    Spacer(minLength: 0)
+                }
             }
         } else if viewModel.isPomodoroRunning {
             // At rest during a focus session: a slim countdown strip hangs

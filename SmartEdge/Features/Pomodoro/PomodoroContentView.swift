@@ -23,7 +23,7 @@ struct PomodoroContentView: View {
             }
             .frame(width: 134)
         }
-        .frame(height: 112)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
     }
