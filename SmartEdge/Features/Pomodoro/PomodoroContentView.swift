@@ -23,6 +23,7 @@ struct PomodoroContentView: View {
             }
             .frame(width: 134)
         }
+        .frame(height: 112)
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
     }
@@ -66,7 +67,7 @@ struct PomodoroContentView: View {
                 .frame(height: 4)
             }
             .padding(12)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
             .background(color(phase), in: RoundedRectangle(cornerRadius: 12))
         }
         .buttonStyle(.plain)
@@ -93,7 +94,7 @@ struct PomodoroContentView: View {
                     .monospacedDigit()
                     .foregroundStyle(.white.opacity(0.6))
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
             .padding(.horizontal, 10)
             .padding(.vertical, 9)
             .background(color(phase).opacity(0.16), in: RoundedRectangle(cornerRadius: 10))
