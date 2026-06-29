@@ -147,6 +147,10 @@ class PreviewMockShelfService: ShelfServiceProtocol {
         )
     }
     func cleanupExpiredItems() async throws {}
+    var currentStorageLocationPath: String { "/tmp/PreviewShelf" }
+    var isUsingCustomStorageLocation: Bool { false }
+    func setStorageLocation(_ url: URL) async throws {}
+    func resetStorageLocation() async throws {}
     func createShelfItem(from url: URL) async throws -> ShelfItem {
         ShelfItem.from(fileURL: url)
     }

@@ -8,7 +8,9 @@ import UniformTypeIdentifiers
 struct ShelfItem: Identifiable, Hashable {
     let id = UUID()
     let name: String
-    let fileURL: URL?
+    /// var so a storage relocation can repoint the file in place while
+    /// preserving `id` (selection/identity stay stable across a move).
+    var fileURL: URL?
     let fileType: FileType
     let dateAdded: Date
     let thumbnail: NSImage?

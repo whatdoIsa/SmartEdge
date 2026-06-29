@@ -1,8 +1,10 @@
 import SwiftUI
-import os
+import AppKit
 
 struct ShelfSettingsPanel: View {
     @EnvironmentObject var settings: SettingsViewModel
+    @State private var storageLocationPath: String = ""
+    @State private var isCustomLocation: Bool = false
 
     var body: some View {
         ScrollView {
@@ -23,6 +25,7 @@ struct ShelfSettingsPanel: View {
             }
             .padding()
         }
+        .onAppear { refreshStorageInfo() }
     }
 
     private var storageSection: some View {
@@ -55,8 +58,26 @@ struct ShelfSettingsPanel: View {
             SettingsRowDivider()
 
             SettingRow(
+                title: "Storage location",
+                description: storageLocationPath.isEmpty ? "Default (inside app container)" : storageLocationPath
+            ) {
+                HStack(spacing: 8) {
+                    Button("Change…") {
+                        changeStorageLocation()
+                    }
+                    if isCustomLocation {
+                        Button("Reset") {
+                            resetStorageLocation()
+                        }
+                    }
+                }
+            }
+
+            SettingsRowDivider()
+
+            SettingRow(
                 title: "Open storage folder",
-                description: "Reveal the Shelf directory in Finder"
+                description: "Reveal the Shelf folder in Finder"
             ) {
                 Button("Open in Finder") {
                     openShelfInFinder()
@@ -105,39 +126,6 @@ struct ShelfSettingsPanel: View {
 
     private var securitySection: some View {
         SettingsCard("Security & Privacy") {
-            SettingRow(
-                title: "Storage location",
-                description: "~/Library/Application Support/SmartEdge/Shelf/"
-            ) {
-                Button("Change") {
-                    changeStorageLocation()
-                }
-            }
-
-            SettingsRowDivider()
-
-            SettingRow(
-                title: "Encrypt files",
-                description: "Require a password to access files stored in the Shelf"
-            ) {
-                Button("Encrypt") {
-                    showEncryptionOptions()
-                }
-            }
-
-            SettingsRowDivider()
-
-            SettingRow(
-                title: "Export files",
-                description: "Save all Shelf files to a zip archive"
-            ) {
-                Button("Export") {
-                    exportFiles()
-                }
-            }
-
-            SettingsRowDivider()
-
             VStack(alignment: .leading, spacing: 8) {
                 Text("Files are stored locally on your Mac and are not uploaded to any servers. AirDrop integration only saves files locally for quick access through the notch interface.")
                     .font(.system(size: 11))
@@ -158,53 +146,72 @@ struct ShelfSettingsPanel: View {
         alert.addButton(withTitle: "Clear All")
         alert.addButton(withTitle: "Cancel")
 
-        alert.runModal()
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        Task {
+            try? await ServiceContainer.shared.shelfService.clearAllItems()
+        }
     }
 
+    @MainActor
     private func openShelfInFinder() {
-        let shelfPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)
-            .first?.appendingPathComponent("SmartEdge/Shelf")
-
-        if let url = shelfPath {
-            NSWorkspace.shared.open(url)
-        }
+        // Open whatever directory the Shelf is actually using right now
+        // (default container or a user-chosen folder).
+        let path = ServiceContainer.shared.shelfService.currentStorageLocationPath
+        try? FileManager.default.createDirectory(
+            at: URL(fileURLWithPath: path), withIntermediateDirectories: true
+        )
+        NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: path)
     }
 
+    @MainActor
+    private func refreshStorageInfo() {
+        let service = ServiceContainer.shared.shelfService
+        storageLocationPath = service.currentStorageLocationPath
+        isCustomLocation = service.isUsingCustomStorageLocation
+    }
+
+    @MainActor
     private func changeStorageLocation() {
-        let openPanel = NSOpenPanel()
-        openPanel.title = "Choose Storage Location"
-        openPanel.canChooseDirectories = true
-        openPanel.canChooseFiles = false
-        openPanel.allowsMultipleSelection = false
+        let panel = NSOpenPanel()
+        panel.title = "Choose Shelf Storage Folder"
+        panel.message = "Pick a folder where the Shelf will keep your files."
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.allowsMultipleSelection = false
+        panel.prompt = "Use This Folder"
 
-        let response = openPanel.runModal()
-        if response == .OK, let url = openPanel.url {
-            AppLogger.settings.info("New storage location: \(url.path, privacy: .public)")
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        Task { @MainActor in
+            do {
+                try await ServiceContainer.shared.shelfService.setStorageLocation(url)
+            } catch {
+                presentStorageError("Couldn't move the Shelf to that folder. \(error.localizedDescription)")
+            }
+            refreshStorageInfo()
         }
     }
 
-    private func showEncryptionOptions() {
-        let alert = NSAlert()
-        alert.messageText = "File Encryption"
-        alert.informativeText = "Enable encryption for files stored in the Shelf. This will require a password to access files."
-        alert.alertStyle = .informational
-        alert.addButton(withTitle: "Enable Encryption")
-        alert.addButton(withTitle: "Cancel")
+    @MainActor
+    private func resetStorageLocation() {
+        Task { @MainActor in
+            do {
+                try await ServiceContainer.shared.shelfService.resetStorageLocation()
+            } catch {
+                presentStorageError("Couldn't reset the Shelf location. \(error.localizedDescription)")
+            }
+            refreshStorageInfo()
+        }
+    }
 
+    private func presentStorageError(_ message: String) {
+        let alert = NSAlert()
+        alert.messageText = "Shelf Storage"
+        alert.informativeText = message
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "OK")
         alert.runModal()
     }
 
-    private func exportFiles() {
-        let savePanel = NSSavePanel()
-        savePanel.title = "Export Shelf Files"
-        savePanel.nameFieldStringValue = "Shelf Export.zip"
-        savePanel.allowedContentTypes = [.zip]
-
-        let response = savePanel.runModal()
-        if response == .OK, let url = savePanel.url {
-            AppLogger.settings.info("Exporting to: \(url.path, privacy: .public)")
-        }
-    }
 }
 
 #Preview {

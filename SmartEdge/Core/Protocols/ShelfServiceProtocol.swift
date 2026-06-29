@@ -31,6 +31,16 @@ protocol ShelfServiceProtocol {
     // MARK: - Storage Management
     func getStorageUsage() async throws -> ShelfStorageInfo
     func cleanupExpiredItems() async throws
+
+    // MARK: - Storage Location
+    /// Filesystem path of the active storage directory (for display).
+    var currentStorageLocationPath: String { get }
+    /// True when files live in a user-chosen folder rather than the container.
+    var isUsingCustomStorageLocation: Bool { get }
+    /// Relocate storage to a user-chosen folder (migrates existing files).
+    func setStorageLocation(_ url: URL) async throws
+    /// Move storage back to the default container location.
+    func resetStorageLocation() async throws
 }
 
 // ClipboardMonitorServiceProtocol is defined in ServiceProtocols.swift

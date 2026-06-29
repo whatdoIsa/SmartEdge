@@ -37,10 +37,14 @@
     <key>com.apple.security.device.bluetooth</key>
     <true/>
 
-    <!-- User-initiated file access: drag-and-drop onto the Shelf. The Shelf
-         copies dropped files into the app's own sandbox container, which
-         needs no extra entitlement. -->
-    <key>com.apple.security.files.user-selected.read-only</key>
+    <!-- User-initiated file access: drag-and-drop onto the Shelf, plus an
+         optional user-chosen Shelf storage folder. read-WRITE (not read-only)
+         is required so the Shelf can copy files into a folder the user picks
+         outside the sandbox container; access persists across launches via a
+         security-scoped bookmark. The default storage stays in the container
+         (no entitlement needed) — this only widens access when the user opts
+         to relocate. -->
+    <key>com.apple.security.files.user-selected.read-write</key>
     <true/>
 
     <!-- Network: download Spotify album artwork + outbound webhooks. -->

@@ -55,6 +55,9 @@ enum SettingsKeys {
     static let enableAirDropIntegration = "enableAirDropIntegration"
     static let autoDeleteOldFiles = "autoDeleteOldFiles"
     static let shelfRetentionDays = "shelfRetentionDays"
+    /// Security-scoped bookmark (Data) for a user-chosen Shelf storage folder.
+    /// Absent → files live in the default container directory.
+    static let shelfStorageBookmark = "shelfStorageBookmark"
 
     // MARK: - System Status
     static let showBatteryStatus = "showBatteryStatus"

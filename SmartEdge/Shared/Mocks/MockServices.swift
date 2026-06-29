@@ -189,6 +189,11 @@ class MockShelfService: ObservableObject, ShelfServiceProtocol {
     func cleanupExpiredItems() async throws {
         // Mock implementation
     }
+
+    var currentStorageLocationPath: String { "/tmp/MockShelf" }
+    var isUsingCustomStorageLocation: Bool { false }
+    func setStorageLocation(_ url: URL) async throws {}
+    func resetStorageLocation() async throws {}
 }
 
 // MARK: - Mock BatteryService

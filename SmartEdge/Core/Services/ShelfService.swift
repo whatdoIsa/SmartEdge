@@ -16,7 +16,16 @@ final class ShelfService: ObservableObject, ShelfServiceProtocol {
     
     // MARK: - Private Properties
     private let configuration: ShelfConfiguration
-    private let tempDirectory: URL
+    /// Default storage inside the sandbox container — also where metadata
+    /// always lives, and the target when the user resets the location.
+    private let containerShelfDirectory: URL
+    /// Where dropped files are actually copied. Defaults to
+    /// `containerShelfDirectory`; may point at a user-chosen folder resolved
+    /// from a security-scoped bookmark.
+    private var filesDirectory: URL
+    /// Held while a user-chosen (out-of-container) folder is active, so we can
+    /// balance `startAccessingSecurityScopedResource` on change / teardown.
+    private var securityScopedURL: URL?
     private let metadataURL: URL
     private let clipboardMonitor: ClipboardMonitorServiceProtocol
     private let fileSharingService: FileSharingServiceProtocol
@@ -47,18 +56,64 @@ final class ShelfService: ObservableObject, ShelfServiceProtocol {
         
         // Setup directories
         let appSupportDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        let shelfDir = appSupportDir.appendingPathComponent(configuration.tempDirectoryName)
-        self.tempDirectory = shelfDir
-        self.metadataURL = shelfDir.appendingPathComponent("shelf_metadata.json")
-        
+        let containerDir = appSupportDir.appendingPathComponent(configuration.tempDirectoryName)
+        self.containerShelfDirectory = containerDir
+        // Metadata is an internal index — keep it in the container as a hidden
+        // dotfile so a user-opened storage folder shows only their files.
+        self.metadataURL = containerDir.appendingPathComponent(".shelf_metadata.json")
+        // Provisionally default; resolved from the bookmark below (needs self).
+        self.filesDirectory = containerDir
+
         // Initialize services
         self.clipboardMonitor = clipboardMonitor ?? ClipboardMonitorService()
         self.fileSharingService = fileSharingService ?? FileSharingService()
-        
+
+        self.filesDirectory = resolveStorageDirectory()
+        migrateMetadataLocationIfNeeded()
         setupDirectories()
         setupBindings()
         loadShelfItems()
         startPeriodicCleanup()
+    }
+
+    /// Resolves the active files directory from a stored security-scoped
+    /// bookmark, falling back to the container on any failure (and clearing the
+    /// bad bookmark so we don't retry forever).
+    private func resolveStorageDirectory() -> URL {
+        guard let data = UserDefaults.standard.data(forKey: SettingsKeys.shelfStorageBookmark) else {
+            return containerShelfDirectory
+        }
+        var isStale = false
+        guard let url = try? URL(
+            resolvingBookmarkData: data,
+            options: [.withSecurityScope],
+            relativeTo: nil,
+            bookmarkDataIsStale: &isStale
+        ), url.startAccessingSecurityScopedResource() else {
+            AppLogger.shelf.error("Shelf storage bookmark unresolvable — using container")
+            UserDefaults.standard.removeObject(forKey: SettingsKeys.shelfStorageBookmark)
+            return containerShelfDirectory
+        }
+        securityScopedURL = url
+        if isStale {
+            if let fresh = try? url.bookmarkData(
+                options: [.withSecurityScope], includingResourceValuesForKeys: nil, relativeTo: nil
+            ) {
+                UserDefaults.standard.set(fresh, forKey: SettingsKeys.shelfStorageBookmark)
+            } else {
+                AppLogger.shelf.error("Shelf storage bookmark is stale and could not be refreshed")
+            }
+        }
+        return url
+    }
+
+    /// One-time rename of the legacy visible metadata file to the hidden name.
+    private func migrateMetadataLocationIfNeeded() {
+        let legacy = containerShelfDirectory.appendingPathComponent("shelf_metadata.json")
+        let fileManager = FileManager.default
+        guard fileManager.fileExists(atPath: legacy.path),
+              !fileManager.fileExists(atPath: metadataURL.path) else { return }
+        try? fileManager.moveItem(at: legacy, to: metadataURL)
     }
 
     /// 1-hour periodic cleanup tick. Cheap — runs `cleanupExpiredItems`
@@ -115,8 +170,8 @@ final class ShelfService: ObservableObject, ShelfServiceProtocol {
         
         let item = shelfItems[index]
         
-        // Remove the file if it's in our temp directory
-        if let fileURL = item.fileURL, fileURL.path.contains(tempDirectory.path) {
+        // Remove the file if it's in our storage directory
+        if let fileURL = item.fileURL, isInStorageDirectory(fileURL) {
             try? FileSecurityManager.secureDeleteFile(at: fileURL)
         }
         
@@ -131,15 +186,15 @@ final class ShelfService: ObservableObject, ShelfServiceProtocol {
     }
     
     func clearAllItems() async throws {
-        // Remove all files in temp directory
-        let fileManager = FileManager.default
-        if fileManager.fileExists(atPath: tempDirectory.path) {
-            let contents = try fileManager.contentsOfDirectory(at: tempDirectory, includingPropertiesForKeys: nil)
-            for url in contents where url.lastPathComponent != "shelf_metadata.json" {
+        // Delete only the files the Shelf itself owns — never enumerate and
+        // wipe the whole directory, which in a user-chosen folder would also
+        // destroy the user's unrelated files (and the metadata index).
+        for item in shelfItems {
+            if let url = item.fileURL, isInStorageDirectory(url) {
                 try? FileSecurityManager.secureDeleteFile(at: url)
             }
         }
-        
+
         // Clear the shelf
         shelfItems.removeAll()
         
@@ -302,7 +357,125 @@ final class ShelfService: ObservableObject, ShelfServiceProtocol {
     }
     
     // MARK: - Public Methods - Storage Management
-    
+
+    var currentStorageLocationPath: String { filesDirectory.path }
+
+    /// Source of truth is the persisted bookmark, not the in-memory access
+    /// flag — so the UI offers "Reset" whenever a custom folder is configured.
+    var isUsingCustomStorageLocation: Bool {
+        UserDefaults.standard.data(forKey: SettingsKeys.shelfStorageBookmark) != nil
+    }
+
+    /// Point the Shelf at a user-chosen folder. Existing files are copied over
+    /// (collision-safe, never overwriting unrelated files), metadata is
+    /// committed to the new locations BEFORE originals are removed, and access
+    /// is persisted via a security-scoped bookmark so it survives relaunches.
+    func setStorageLocation(_ url: URL) async throws {
+        guard url.standardizedFileURL != filesDirectory.standardizedFileURL else { return }
+        let accessing = url.startAccessingSecurityScopedResource()
+        do {
+            try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+            let bookmark = try url.bookmarkData(
+                options: [.withSecurityScope], includingResourceValuesForKeys: nil, relativeTo: nil
+            )
+            try await commitRelocation(to: url, bookmark: bookmark, keepingAccessTo: accessing ? url : nil)
+        } catch {
+            if accessing { url.stopAccessingSecurityScopedResource() }
+            throw error
+        }
+    }
+
+    /// Move the Shelf back to the default container location.
+    func resetStorageLocation() async throws {
+        guard isUsingCustomStorageLocation else { return }
+        try FileManager.default.createDirectory(at: containerShelfDirectory, withIntermediateDirectories: true)
+        try await commitRelocation(to: containerShelfDirectory, bookmark: nil, keepingAccessTo: nil)
+    }
+
+    /// Shared relocation pipeline: copy → persist metadata → delete originals.
+    /// `bookmark == nil` resets to the container; otherwise persists the
+    /// bookmark. `keepingAccessTo` becomes the held security scope on success.
+    private func commitRelocation(to newDir: URL, bookmark: Data?, keepingAccessTo newScope: URL?) async throws {
+        let oldDir = filesDirectory
+        let oldItems = shelfItems
+        let migrated = try copyItems(oldItems, into: newDir)
+
+        // Commit metadata pointing at the new locations BEFORE deleting
+        // originals — a crash/throw here must not orphan every file.
+        shelfItems = migrated
+        do {
+            try await persistShelfMetadata()
+        } catch {
+            shelfItems = oldItems
+            for item in migrated { if let u = item.fileURL { try? FileManager.default.removeItem(at: u) } }
+            throw error
+        }
+
+        if let bookmark {
+            UserDefaults.standard.set(bookmark, forKey: SettingsKeys.shelfStorageBookmark)
+        } else {
+            UserDefaults.standard.removeObject(forKey: SettingsKeys.shelfStorageBookmark)
+        }
+        // Delete originals while the OLD scope is still active, then swap.
+        deleteOriginals(oldItems, in: oldDir)
+        securityScopedURL?.stopAccessingSecurityScopedResource()
+        securityScopedURL = newScope
+        filesDirectory = newDir
+        await updateStorageInfo()
+    }
+
+    /// Copies each item's file into `dir` with collision-safe names, returning
+    /// items repointed to their actual new URLs (id preserved). Never deletes
+    /// or overwrites a file it didn't create. Does NOT remove originals.
+    private func copyItems(_ items: [ShelfItem], into dir: URL) throws -> [ShelfItem] {
+        let fileManager = FileManager.default
+        return try items.map { item in
+            guard let oldURL = item.fileURL, fileManager.fileExists(atPath: oldURL.path) else { return item }
+            if oldURL.deletingLastPathComponent().standardizedFileURL == dir.standardizedFileURL {
+                return item // already in the destination
+            }
+            let dest = uniqueDestinationURL(forName: oldURL.lastPathComponent, in: dir)
+            try fileManager.copyItem(at: oldURL, to: dest)
+            var moved = item
+            moved.fileURL = dest
+            return moved
+        }
+    }
+
+    /// Removes the given items' files if they live directly in `oldDir`.
+    private func deleteOriginals(_ items: [ShelfItem], in oldDir: URL) {
+        let base = oldDir.standardizedFileURL.path
+        for item in items {
+            guard let url = item.fileURL,
+                  url.deletingLastPathComponent().standardizedFileURL.path == base else { continue }
+            try? FileManager.default.removeItem(at: url)
+        }
+    }
+
+    /// A non-colliding URL in `dir` for `name`, suffixing "-1", "-2"… if taken.
+    private func uniqueDestinationURL(forName name: String, in dir: URL) -> URL {
+        let fileManager = FileManager.default
+        var candidate = dir.appendingPathComponent(name)
+        guard fileManager.fileExists(atPath: candidate.path) else { return candidate }
+        let stem = (name as NSString).deletingPathExtension
+        let ext = (name as NSString).pathExtension
+        var index = 1
+        repeat {
+            let suffixed = ext.isEmpty ? "\(stem)-\(index)" : "\(stem)-\(index).\(ext)"
+            candidate = dir.appendingPathComponent(suffixed)
+            index += 1
+        } while fileManager.fileExists(atPath: candidate.path)
+        return candidate
+    }
+
+    /// True when `url` lives inside the active storage directory (proper path
+    /// prefix, not a fragile substring match).
+    private func isInStorageDirectory(_ url: URL) -> Bool {
+        let base = filesDirectory.standardizedFileURL.path
+        let path = url.standardizedFileURL.path
+        return path == base || path.hasPrefix(base + "/")
+    }
+
     func getStorageUsage() async throws -> ShelfStorageInfo {
         await updateStorageInfo()
         return storageInfo
@@ -336,15 +509,14 @@ final class ShelfService: ObservableObject, ShelfServiceProtocol {
     
     private func setupDirectories() {
         let fileManager = FileManager.default
-        
-        do {
-            try fileManager.createDirectory(
-                at: tempDirectory,
-                withIntermediateDirectories: true,
-                attributes: nil
-            )
-        } catch {
-            AppLogger.shelf.error("Failed to create shelf directory: \(error.localizedDescription, privacy: .public)")
+        // Both the active files dir AND the container dir must exist — metadata
+        // always lives in the container even when files are stored elsewhere.
+        for dir in Set([filesDirectory.path, containerShelfDirectory.path]).map({ URL(fileURLWithPath: $0) }) {
+            do {
+                try fileManager.createDirectory(at: dir, withIntermediateDirectories: true, attributes: nil)
+            } catch {
+                AppLogger.shelf.error("Failed to create shelf directory: \(error.localizedDescription, privacy: .public)")
+            }
         }
     }
     
@@ -369,22 +541,22 @@ final class ShelfService: ObservableObject, ShelfServiceProtocol {
     private func processItemForStorage(_ item: ShelfItem) async throws -> ShelfItem {
         guard let fileURL = item.fileURL else { return item }
         
-        // If file is already in our temp directory, don't copy
-        if fileURL.path.contains(tempDirectory.path) {
+        // If file is already in our storage directory, don't copy
+        if isInStorageDirectory(fileURL) {
             return item
         }
-        
-        // Create a unique filename in temp directory
+
+        // Collision-safe destination in the storage directory.
         let filename = FileSecurityManager.sanitizeFileName(item.name)
-        let tempFileURL = tempDirectory.appendingPathComponent(filename)
-        
-        // Copy file to temp directory
-        try FileManager.default.copyItem(at: fileURL, to: tempFileURL)
-        
+        let destinationURL = uniqueDestinationURL(forName: filename, in: filesDirectory)
+
+        // Copy file into the storage directory
+        try FileManager.default.copyItem(at: fileURL, to: destinationURL)
+
         // Return updated item with new URL
         return ShelfItem(
             name: item.name,
-            fileURL: tempFileURL,
+            fileURL: destinationURL,
             fileType: item.fileType,
             dateAdded: item.dateAdded,
             thumbnail: item.thumbnail
@@ -393,15 +565,15 @@ final class ShelfService: ObservableObject, ShelfServiceProtocol {
     
     private func createTemporaryFile(for text: String, withExtension ext: String) async throws -> URL {
         let filename = "clipboard_\(UUID().uuidString).\(ext)"
-        let tempURL = tempDirectory.appendingPathComponent(filename)
-        
+        let tempURL = filesDirectory.appendingPathComponent(filename)
+
         try text.write(to: tempURL, atomically: true, encoding: .utf8)
         return tempURL
     }
-    
+
     private func createTemporaryFile(for image: NSImage) async throws -> URL {
         let filename = "clipboard_\(UUID().uuidString).png"
-        let tempURL = tempDirectory.appendingPathComponent(filename)
+        let tempURL = filesDirectory.appendingPathComponent(filename)
         
         guard let tiffData = image.tiffRepresentation,
               let bitmapRep = NSBitmapImageRep(data: tiffData),
@@ -507,6 +679,7 @@ final class ShelfService: ObservableObject, ShelfServiceProtocol {
     deinit {
         cleanupTimer?.invalidate()
         cancellables.removeAll()
+        securityScopedURL?.stopAccessingSecurityScopedResource()
         let monitor = clipboardMonitor
         Task {
             await monitor.stopMonitoring()
