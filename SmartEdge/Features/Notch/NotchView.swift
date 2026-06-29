@@ -392,10 +392,19 @@ private struct PomodoroRestingBar: View {
             // that hangs below it so it isn't clipped by the notch.
             Spacer().frame(height: topInset)
             Spacer(minLength: 0)
-            HStack(spacing: 6) {
-                Circle()
-                    .fill(pomodoro.themeAccent ?? .white)
-                    .frame(width: 6, height: 6)
+            HStack(spacing: 8) {
+                ZStack {
+                    Circle()
+                        .stroke(.white.opacity(0.18), lineWidth: 2.4)
+                    Circle()
+                        .trim(from: 0, to: pomodoro.progress)
+                        .stroke(pomodoro.themeAccent ?? .white,
+                                style: StrokeStyle(lineWidth: 2.4, lineCap: .round))
+                        .rotationEffect(.degrees(-90))
+                        .animation(.linear(duration: 1.0), value: pomodoro.progress)
+                }
+                .frame(width: 18, height: 18)
+
                 Text(pomodoro.formattedRemaining)
                     .font(.system(size: 13, weight: .semibold, design: .monospaced))
                     .foregroundColor(.white)
