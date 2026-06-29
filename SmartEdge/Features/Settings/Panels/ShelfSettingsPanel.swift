@@ -31,17 +31,12 @@ struct ShelfSettingsPanel: View {
     private var storageSection: some View {
         SettingsCard("Storage") {
             SettingRow(
-                title: "Storage limit",
-                description: "Maximum space the Shelf may use before old files are pruned"
+                title: "Storage capacity",
+                description: "Holds up to 50 files (5 GB). The oldest files are cleared automatically if it ever fills up."
             ) {
-                HStack(spacing: 10) {
-                    Slider(value: $settings.shelfStorageLimit, in: 50...1000, step: 50)
-                        .frame(width: 130)
-                    Text("\(String(format: "%.0f", settings.shelfStorageLimit)) MB")
-                        .font(.system(size: 12, design: .monospaced))
-                        .foregroundColor(.secondary)
-                        .frame(width: 60, alignment: .trailing)
-                }
+                Text("5 GB")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.secondary)
             }
 
             SettingsRowDivider()

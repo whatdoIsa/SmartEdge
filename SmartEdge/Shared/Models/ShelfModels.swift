@@ -395,8 +395,8 @@ struct ShelfConfiguration {
     let autoCleanupEnabled: Bool
     
     static let `default` = ShelfConfiguration(
-        maxItems: 20,
-        maxTotalSize: 2 * 1024 * 1024 * 1024, // 2GB total
+        maxItems: 50,
+        maxTotalSize: 5 * 1024 * 1024 * 1024, // 5GB total — generous, fixed
         itemExpiryDays: 30,
         tempDirectoryName: "SmartEdgeShelf",
         allowedFileTypes: Set(FileType.allCases.filter { $0 != .unknown }),

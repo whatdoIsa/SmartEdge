@@ -603,17 +603,10 @@ final class ShelfService: ObservableObject, ShelfServiceProtocol {
             }
         }
         
-        // Effective cap = user-set settings.shelfStorageLimit (MB → bytes)
-        // OR the static configuration default if the user hasn't moved
-        // the slider yet. Previously this only used the static default,
-        // so the SettingsPanel slider was UI-only — moving it didn't
-        // actually change the underlying threshold. Settings storedAs
-        // Double in MB; clamp to a sane floor so an accidentally
-        // zeroed-out preference doesn't trip auto-cleanup of every item.
-        let userLimitMB = UserDefaults.standard.double(forKey: SettingsKeys.shelfStorageLimit)
-        let effectiveMaxBytes: Int64 = userLimitMB > 0
-            ? Int64(max(userLimitMB, 10) * 1024 * 1024)
-            : configuration.maxTotalSize
+        // Fixed, generous cap — the Shelf is a convenience holding area, not a
+        // metered store, so we don't expose an adjustable limit. Auto-cleanup
+        // trims the oldest items only if this ceiling is ever approached.
+        let effectiveMaxBytes = configuration.maxTotalSize
 
         storageInfo = ShelfStorageInfo(
             totalSizeBytes: totalSize,
