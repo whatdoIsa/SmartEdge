@@ -177,6 +177,14 @@ final class PomodoroService: ObservableObject {
         scheduleTimer()
     }
 
+    /// Start a specific session type immediately — used when the user picks
+    /// one of the focus/short-break/long-break cards in the notch.
+    func startSession(_ phase: Phase) {
+        enter(phase)
+        isRunning = true
+        scheduleTimer()
+    }
+
     func pause() {
         isRunning = false
         timer?.invalidate()

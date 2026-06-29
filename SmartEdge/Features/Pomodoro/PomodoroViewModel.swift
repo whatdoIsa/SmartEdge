@@ -61,6 +61,15 @@ final class PomodoroViewModel: ObservableObject {
     // MARK: - Actions
 
     func start() { service.start() }
+
+    /// Start a specific session type (user tapped a session card in the notch).
+    func startSession(_ phase: PomodoroService.Phase) { service.startSession(phase) }
+
+    /// "mm:ss" length of a configured phase, for the session cards.
+    func durationText(for phase: PomodoroService.Phase) -> String {
+        let total = max(0, Int(service.duration(for: phase)))
+        return String(format: "%d:%02d", total / 60, total % 60)
+    }
     func pause() { service.pause() }
     func reset() { service.reset() }
     func skip() { service.skip() }
