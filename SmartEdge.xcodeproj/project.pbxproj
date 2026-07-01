@@ -32,6 +32,8 @@
 		3E1C7C66F3CC48C69A3A427F /* SmartEdge/Utils/Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FDC9208523546C4A7BA14DC /* SmartEdge/Utils/Constants.swift */; };
 		3E5CAD4BD42F46BE8132493F /* SmartEdge/Features/Pomodoro/PomodoroContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77E0D6276B54C168749EC51 /* SmartEdge/Features/Pomodoro/PomodoroContentView.swift */; };
 		3EC495622E5C4C17A0709EF0 /* SmartEdge/Features/Calendar/CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9535B73E8A6344DD88723CFB /* SmartEdge/Features/Calendar/CalendarView.swift */; };
+		2CC264219398635C3F5F2E75 /* SmartEdge/Features/Calendar/QuickAddViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBBED691A2964ECE92011EB8 /* SmartEdge/Features/Calendar/QuickAddViewModel.swift */; };
+		37022B3ECF9DCE04579C5EB1 /* SmartEdge/Features/Calendar/QuickAddView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D342AE0BC909802E7CC92E2 /* SmartEdge/Features/Calendar/QuickAddView.swift */; };
 		415852C48A8445A7905D7004 /* SmartEdge/Shared/Models/MediaModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06112EAEC2CF413091EDEBBF /* SmartEdge/Shared/Models/MediaModels.swift */; };
 		4205D694014F47B7B28903DB /* SmartEdge/Features/Settings/Panels/GeneralSettingsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 777FEE089B5344508C637B7D /* SmartEdge/Features/Settings/Panels/GeneralSettingsPanel.swift */; };
 		43908EA2D03E4F2CA4BC6AD4 /* SmartEdge/Features/Notch/NotchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15DB1C04BEEC44EC9C98E877 /* SmartEdge/Features/Notch/NotchView.swift */; };
@@ -195,6 +197,8 @@
 		8B9304177E52436B912A9FEC /* SmartEdge/Core/Protocols/NotchWindowManagerProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Protocols/NotchWindowManagerProtocol.swift; sourceTree = "<group>"; };
 		90043C76187F4381B7103DB9 /* SmartEdge/Core/Protocols/AppCoordinatorProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Protocols/AppCoordinatorProtocol.swift; sourceTree = "<group>"; };
 		9535B73E8A6344DD88723CFB /* SmartEdge/Features/Calendar/CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Calendar/CalendarView.swift; sourceTree = "<group>"; };
+		FBBED691A2964ECE92011EB8 /* SmartEdge/Features/Calendar/QuickAddViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Calendar/QuickAddViewModel.swift; sourceTree = "<group>"; };
+		9D342AE0BC909802E7CC92E2 /* SmartEdge/Features/Calendar/QuickAddView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Features/Calendar/QuickAddView.swift; sourceTree = "<group>"; };
 		9BA9E2C217584AF3937B7A82 /* SmartEdge/Shared/Components/NotchAnimation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Shared/Components/NotchAnimation.swift; sourceTree = "<group>"; };
 		9CBAB0E30B2F44899CE30930 /* SmartEdge/Core/Services/EventNotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Services/EventNotificationService.swift; sourceTree = "<group>"; };
 		9E8FD0F5E6D9480FA4239AF8 /* SmartEdge/Core/Services/ServiceContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartEdge/Core/Services/ServiceContainer.swift; sourceTree = "<group>"; };
@@ -480,6 +484,8 @@
 				4C98774C467C41BEA78F3302 /* SmartEdge/Core/Services/SystemService.swift */,
 				77E317A4B4374F48B227D726 /* SmartEdge/Features/Calendar/CalendarQuickActions.swift */,
 				9535B73E8A6344DD88723CFB /* SmartEdge/Features/Calendar/CalendarView.swift */,
+				FBBED691A2964ECE92011EB8 /* SmartEdge/Features/Calendar/QuickAddViewModel.swift */,
+				9D342AE0BC909802E7CC92E2 /* SmartEdge/Features/Calendar/QuickAddView.swift */,
 				1916BB3A8EB342F9A37A937B /* SmartEdge/Features/Calendar/CalendarViewModel.swift */,
 				4099A2E6DC7C4734A00C1346 /* SmartEdge/Features/MediaControl/ViewModels/MediaControlViewModel.swift */,
 				1628C2041F5A4AB1B21A7E74 /* SmartEdge/Features/MediaControl/Views/MediaControlWidget.swift */,
@@ -664,6 +670,8 @@
 				E1A2B3C4D5E6F70819203150 /* SmartEdge/Core/Services/StoreService.swift in Sources */,
 				7274F0AE458A479AA66C92A0 /* SmartEdge/Features/Calendar/CalendarQuickActions.swift in Sources */,
 				3EC495622E5C4C17A0709EF0 /* SmartEdge/Features/Calendar/CalendarView.swift in Sources */,
+				2CC264219398635C3F5F2E75 /* SmartEdge/Features/Calendar/QuickAddViewModel.swift in Sources */,
+				37022B3ECF9DCE04579C5EB1 /* SmartEdge/Features/Calendar/QuickAddView.swift in Sources */,
 				2B523145AF65433D8A573087 /* SmartEdge/Features/Calendar/CalendarViewModel.swift in Sources */,
 				245BF07B62264B8EA7C21CE2 /* SmartEdge/Features/MediaControl/ViewModels/MediaControlViewModel.swift in Sources */,
 				78C5E6CABD084178B44EBEDC /* SmartEdge/Features/MediaControl/Views/MediaControlWidget.swift in Sources */,

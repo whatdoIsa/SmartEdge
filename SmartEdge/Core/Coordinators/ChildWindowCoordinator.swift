@@ -18,6 +18,8 @@ final class ChildWindowCoordinator {
     private var pomodoroStatsHandler: WindowCloseHandler?
     private var shelfWindow: NSWindow?
     private var shelfHandler: WindowCloseHandler?
+    private var quickAddWindow: NSWindow?
+    private var quickAddHandler: WindowCloseHandler?
 
     /// Opens (or focuses, if already open) the permission guide window.
     /// `onContinue` fires when the user clicks "Continue" inside the view
@@ -90,6 +92,32 @@ final class ChildWindowCoordinator {
             shelfWindow = window
         }
         focus(shelfWindow)
+    }
+
+    /// Opens (or focuses) the natural-language Quick Add window. A normal,
+    /// key-able window so the text field can take keyboard focus (the notch
+    /// overlay can't). `dismiss` on the view model closes it.
+    func showQuickAdd(viewModel: QuickAddViewModel) {
+        if quickAddWindow == nil {
+            let view = QuickAddView(viewModel: viewModel)
+            let window = makeWindow(
+                title: "New Event",
+                content: view
+            ) { [weak self] in
+                self?.quickAddWindow = nil
+                self?.quickAddHandler = nil
+            } storeHandlerIn: { handler in
+                quickAddHandler = handler
+            }
+            window.titleVisibility = .hidden
+            window.titlebarAppearsTransparent = true
+            window.level = .floating
+            window.setContentSize(NSSize(width: 400, height: 220))
+            window.center()
+            viewModel.dismiss = { [weak window] in window?.close() }
+            quickAddWindow = window
+        }
+        focus(quickAddWindow)
     }
 
     // MARK: - Private

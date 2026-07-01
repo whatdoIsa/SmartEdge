@@ -72,6 +72,14 @@ final class MenuBarController: NSObject {
         calendar.target = self
         menu.addItem(calendar)
 
+        let quickAdd = NSMenuItem(
+            title: "New Event…  ⌃⌥N",
+            action: #selector(openQuickAdd),
+            keyEquivalent: ""
+        )
+        quickAdd.target = self
+        menu.addItem(quickAdd)
+
         menu.addItem(NSMenuItem.separator())
 
         let pomodoro = NSMenuItem(
@@ -187,6 +195,10 @@ final class MenuBarController: NSObject {
 
     @objc private func openCalendar() {
         appCoordinator?.showCalendar()
+    }
+
+    @objc private func openQuickAdd() {
+        appCoordinator?.showQuickAdd()
     }
 
     @objc private func openFocusTimer() {
