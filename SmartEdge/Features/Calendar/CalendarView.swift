@@ -55,25 +55,34 @@ struct CalendarView: View {
     }
     
     private var upcomingEventsSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if viewModel.upcomingEvents.isEmpty {
+        // Today-only agenda — the notch is a "what's left today" glance, so
+        // tomorrow's events aren't mixed in (the rows show time without a date,
+        // which made cross-day events ambiguous).
+        VStack(alignment: .leading, spacing: 0) {
+            if viewModel.todayEvents.isEmpty {
                 noEventsView
             } else {
-                ForEach(viewModel.upcomingEvents.prefix(3)) { event in
+                let events = Array(viewModel.todayEvents.prefix(3))
+                ForEach(Array(events.enumerated()), id: \.element.id) { index, event in
                     eventRow(event)
+                    if index < events.count - 1 {
+                        Rectangle()
+                            .fill(Color.white.opacity(0.08))
+                            .frame(height: 0.5)
+                    }
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
-    
+
     private var noEventsView: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("No Events")
+            Text("No events today")
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .foregroundStyle(.secondary)
-            
+
             Text("Enjoy your free time")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
@@ -81,96 +90,47 @@ struct CalendarView: View {
     }
     
     private func eventRow(_ event: CalendarEvent) -> some View {
-        HStack(spacing: 8) {
-            // Event time indicator
+        // TOSS-minimal row: a thin app-coral bar + title/time, rows separated
+        // by hairlines (no card fill) for a clean, information-dense glance.
+        HStack(spacing: 11) {
             RoundedRectangle(cornerRadius: 2)
-                .fill(colorForEvent(event))
-                .frame(width: 3, height: 20)
-            
-            VStack(alignment: .leading, spacing: 1) {
+                .fill(NotchTheme.brandCoral)
+                .frame(width: 3)
+                .frame(maxHeight: .infinity)
+
+            VStack(alignment: .leading, spacing: 2) {
                 Text(event.title)
                     .font(.caption)
                     .fontWeight(.medium)
                     .lineLimit(1)
                     .foregroundStyle(.primary)
-                
-                HStack(spacing: 4) {
-                    Text(formatEventTime(event.startDate))
+
+                if event.isAllDay {
+                    Text("All Day")
+                        .font(.caption2)
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 1)
+                        .background(.secondary.opacity(0.2))
+                        .clipShape(Capsule())
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("\(formatEventTime(event.startDate)) - \(formatEventTime(event.endDate))")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
-                    
-                    if event.isAllDay {
-                        Text("All Day")
-                            .font(.caption2)
-                            .padding(.horizontal, 4)
-                            .padding(.vertical, 1)
-                            .background(.secondary.opacity(0.2))
-                            .clipShape(Capsule())
-                            .foregroundStyle(.secondary)
-                    } else {
-                        Text("- \(formatEventTime(event.endDate))")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
                 }
             }
-            
-            Spacer()
-            
-            if event.isUpcoming {
-                Text(timeUntilEvent(event.startDate))
-                    .font(.caption2)
-                    .fontWeight(.medium)
-                    .foregroundStyle(.blue)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(.blue.opacity(0.1))
-                    .clipShape(Capsule())
-            }
+
+            Spacer(minLength: 0)
         }
-        .animation(.easeInOut(duration: 0.2), value: event.isUpcoming)
+        .padding(.vertical, 9)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
-    
+
     // MARK: - Helper Methods
-    private func colorForEvent(_ event: CalendarEvent) -> Color {
-        // Use calendar color or default based on availability
-        switch event.calendar.color {
-        case .red:
-            return .red
-        case .orange:
-            return .orange
-        case .blue:
-            return .blue
-        case .green:
-            return .green
-        case .purple:
-            return .purple
-        default:
-            return .blue
-        }
-    }
-    
     private func formatEventTime(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.timeStyle = .short
         return formatter.string(from: date)
-    }
-    
-    private func timeUntilEvent(_ date: Date) -> String {
-        let timeInterval = date.timeIntervalSinceNow
-        
-        if timeInterval < 0 {
-            return "Now"
-        } else if timeInterval < 3600 { // Less than 1 hour
-            let minutes = Int(timeInterval / 60)
-            return "\(minutes)m"
-        } else if timeInterval < 86400 { // Less than 1 day
-            let hours = Int(timeInterval / 3600)
-            return "\(hours)h"
-        } else {
-            let days = Int(timeInterval / 86400)
-            return "\(days)d"
-        }
     }
 }
 

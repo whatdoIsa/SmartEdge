@@ -220,6 +220,18 @@ final class AppCoordinator: ObservableObject, AppCoordinatorProtocol {
         childWindows.showShelf(viewModel: shelfViewModel)
     }
 
+    /// Toggles a pinned Calendar in the notch. Kept in the notch (not a
+    /// standalone window) so the notch stays the app's home surface — the
+    /// automatic 5s nudge only flashes, this lets the user hold it open.
+    func showCalendar() {
+        if notchViewModel.isCalendarPinned {
+            notchViewModel.closeCalendar()
+            return
+        }
+        guard requirePro("캘린더") else { return }
+        notchViewModel.showCalendarPanel()
+    }
+
     /// Forces the notch to show the clipboard history list.
     func showClipboardHistory() {
         notchViewModel.forceShowContent(.clipboardHistory)

@@ -199,6 +199,10 @@ final class NotchWindowManager: NSObject, NotchWindowManagerProtocol {
 
         guard let viewModel = notchViewModel else { return }
 
+        // A pinned Calendar owns the notch — ignore hover so it isn't swapped
+        // out for the music player when the cursor passes over.
+        if viewModel.isCalendarPinned { return }
+
         // While the notch is auto-pulsing (e.g. for a track or play/pause
         // change), AppKit fires a spurious `mouseEntered` because the
         // window grew underneath the cursor. We don't want that to

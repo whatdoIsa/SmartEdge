@@ -64,6 +64,14 @@ final class MenuBarController: NSObject {
         shelf.target = self
         menu.addItem(shelf)
 
+        let calendar = NSMenuItem(
+            title: "Show Calendar",
+            action: #selector(openCalendar),
+            keyEquivalent: ""
+        )
+        calendar.target = self
+        menu.addItem(calendar)
+
         menu.addItem(NSMenuItem.separator())
 
         let pomodoro = NSMenuItem(
@@ -175,6 +183,10 @@ final class MenuBarController: NSObject {
 
     @objc private func openShelf() {
         appCoordinator?.showShelf()
+    }
+
+    @objc private func openCalendar() {
+        appCoordinator?.showCalendar()
     }
 
     @objc private func openFocusTimer() {

@@ -89,6 +89,11 @@ final class NotchViewModel: ObservableObject {
     /// a small indicator the user can glance at, and hovering still shows music).
     @Published private(set) var isPomodoroRunning = false
 
+    /// True while the user has pinned the Calendar in the notch via the menu.
+    /// A pinned calendar stays put (no 5s auto-hide, ignores hover and the
+    /// automatic upcoming-event nudge) until dismissed.
+    @Published private(set) var isCalendarPinned = false
+
     /// Auto-collapse for the brief "session started" reveal.
     private var pomodoroIntroWorkItem: DispatchWorkItem?
 
@@ -168,7 +173,31 @@ final class NotchViewModel: ObservableObject {
 
         processNextInQueue()
     }
-    
+
+    /// Pin the Calendar open in the notch (menu "Show Calendar"). Unlike the
+    /// automatic upcoming-event nudge, this stays until the user dismisses it,
+    /// so there's no auto-hide timer and hover/nudges don't replace it.
+    func showCalendarPanel() {
+        pomodoroIntroWorkItem?.cancel()
+        contentTimer?.invalidate()
+        contentTimer = nil
+        isHoverExpanded = false
+        isCalendarPinned = true
+        previousContent = currentContent
+        currentContent = .calendar(event: calendarService.nextEvent)
+        isExpanded = true
+    }
+
+    /// Dismiss the pinned Calendar and collapse the notch.
+    func closeCalendar() {
+        isCalendarPinned = false
+        isHoverExpanded = false
+        contentTimer?.invalidate()
+        contentTimer = nil
+        currentContent = .collapsed
+        isExpanded = false
+    }
+
     func forceShowContent(_ content: NotchContent) {
         previousContent = currentContent
 
@@ -580,6 +609,10 @@ final class NotchViewModel: ObservableObject {
     private var pendingPulseWorkItem: DispatchWorkItem?
     
     private func handleCalendarEvents(_ events: [CalendarEvent]) {
+        // A pinned calendar (menu "Show Calendar") owns the notch — don't let
+        // the periodic refresh's automatic nudge replace or disturb it.
+        guard !isCalendarPinned else { return }
+
         // Calendar notch nudges are a Pro feature. Gate silently here —
         // unlike Shelf/Pomodoro (user-initiated, so they get an upsell),
         // calendar surfacing is automatic, so a locked free user simply
