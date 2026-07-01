@@ -76,6 +76,10 @@ struct CalendarInfo: Identifiable, Equatable, Hashable {
     let id: String
     let title: String
     let color: CalendarColor
+    /// The calendar's true color as normalized [r, g, b, a] (0...1), captured
+    /// straight from `EKCalendar.cgColor` so the notch can mirror the exact
+    /// color the user set in Calendar. Empty when unavailable.
+    var colorComponents: [Double] = []
     let isSubscribed: Bool
     let allowsContentModifications: Bool
     let source: CalendarSource

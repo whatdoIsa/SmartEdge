@@ -222,6 +222,7 @@ final class CalendarService: ObservableObject, CalendarServiceProtocol {
             id: ekEvent.calendar.calendarIdentifier,
             title: ekEvent.calendar.title,
             color: convertCalendarColor(ekEvent.calendar.cgColor),
+            colorComponents: rgbaComponents(from: ekEvent.calendar.cgColor),
             isSubscribed: ekEvent.calendar.isSubscribed,
             allowsContentModifications: ekEvent.calendar.allowsContentModifications,
             source: convertCalendarSource(ekEvent.calendar.source.sourceType)
@@ -340,6 +341,21 @@ final class CalendarService: ObservableObject, CalendarServiceProtocol {
     
     // MARK: - Helper Conversion Methods
     
+    /// The calendar's true color as normalized [r, g, b, a], handling both RGB
+    /// and grayscale `cgColor` component layouts. Empty when unavailable so the
+    /// view can fall back to the app accent.
+    private func rgbaComponents(from cgColor: CGColor?) -> [Double] {
+        guard let components = cgColor?.components, !components.isEmpty else { return [] }
+        if components.count >= 3 {
+            let alpha = components.count >= 4 ? components[3] : 1
+            return [Double(components[0]), Double(components[1]), Double(components[2]), Double(alpha)]
+        }
+        // Grayscale: [white, alpha]
+        let white = Double(components[0])
+        let alpha = components.count >= 2 ? Double(components[1]) : 1
+        return [white, white, white, alpha]
+    }
+
     private func convertCalendarColor(_ cgColor: CGColor?) -> CalendarColor {
         guard let cgColor = cgColor else { return .gray }
         

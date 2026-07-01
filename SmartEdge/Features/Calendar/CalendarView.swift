@@ -69,6 +69,7 @@ struct CalendarView: View {
                         Rectangle()
                             .fill(Color.white.opacity(0.08))
                             .frame(height: 0.5)
+                            .padding(.leading, 8)
                     }
                 }
             }
@@ -91,42 +92,76 @@ struct CalendarView: View {
     
     private func eventRow(_ event: CalendarEvent) -> some View {
         // TOSS-minimal row: a thin app-coral bar + title/time, rows separated
-        // by hairlines (no card fill) for a clean, information-dense glance.
-        HStack(spacing: 11) {
+        // by hairlines. The currently-happening timed event gets a coral tint
+        // + "Now" badge so it stands out at a glance.
+        let happening = event.isHappening && !event.isAllDay
+        return HStack(spacing: 11) {
             RoundedRectangle(cornerRadius: 2)
-                .fill(NotchTheme.brandCoral)
+                .fill(calendarColor(for: event))
                 .frame(width: 3)
                 .frame(maxHeight: .infinity)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(event.title)
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .lineLimit(1)
-                    .foregroundStyle(.primary)
+                HStack(spacing: 6) {
+                    Text(event.title)
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .lineLimit(1)
+                        .foregroundStyle(.primary)
 
-                if event.isAllDay {
-                    Text("All Day")
-                        .font(.caption2)
-                        .padding(.horizontal, 4)
-                        .padding(.vertical, 1)
-                        .background(.secondary.opacity(0.2))
-                        .clipShape(Capsule())
-                        .foregroundStyle(.secondary)
-                } else {
-                    Text("\(formatEventTime(event.startDate)) - \(formatEventTime(event.endDate))")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                    if happening {
+                        Text("Now")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(NotchTheme.brandCoral)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 1)
+                            .background(NotchTheme.brandCoral.opacity(0.20), in: Capsule())
+                    }
                 }
+
+                eventSubtitle(event)
             }
 
             Spacer(minLength: 0)
         }
         .padding(.vertical, 9)
+        .padding(.horizontal, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            happening ? NotchTheme.brandCoral.opacity(0.12) : Color.clear,
+            in: RoundedRectangle(cornerRadius: 9)
+        )
+    }
+
+    @ViewBuilder
+    private func eventSubtitle(_ event: CalendarEvent) -> some View {
+        if event.isAllDay {
+            // All-day events aren't time-specific — mark them with an icon
+            // instead of a time range so they read differently from timed ones.
+            HStack(spacing: 3) {
+                Image(systemName: "sun.max.fill")
+                    .font(.system(size: 9))
+                Text("All day")
+                    .font(.caption2)
+            }
+            .foregroundStyle(.secondary)
+        } else {
+            Text("\(formatEventTime(event.startDate)) - \(formatEventTime(event.endDate))")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+        }
     }
 
     // MARK: - Helper Methods
+
+    /// The event's own calendar color (as set in Calendar), falling back to the
+    /// app accent when the color is unavailable.
+    private func calendarColor(for event: CalendarEvent) -> Color {
+        let rgba = event.calendar.colorComponents
+        guard rgba.count >= 3 else { return NotchTheme.brandCoral }
+        return Color(.sRGB, red: rgba[0], green: rgba[1], blue: rgba[2], opacity: rgba.count >= 4 ? rgba[3] : 1)
+    }
+
     private func formatEventTime(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.timeStyle = .short
