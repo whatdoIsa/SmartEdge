@@ -89,8 +89,16 @@ final class NotchViewModel: ObservableObject {
     /// a small indicator the user can glance at, and hovering still shows music).
     @Published private(set) var isPomodoroRunning = false
 
+    /// True while the user has pinned the Calendar in the notch via the menu.
+    /// A pinned calendar stays put (no 5s auto-hide, ignores hover and the
+    /// automatic upcoming-event nudge) until dismissed.
+    @Published private(set) var isCalendarPinned = false
+
     /// Auto-collapse for the brief "session started" reveal.
     private var pomodoroIntroWorkItem: DispatchWorkItem?
+
+    /// Peek auto-collapse for a menu-opened calendar the user never hovers.
+    private var calendarCollapseTimer: Timer?
 
     /// Mirrors the pomodoro view model's themeAccent into this VM so the
     /// notch view can observe a single source of truth.
@@ -140,6 +148,7 @@ final class NotchViewModel: ObservableObject {
     deinit {
         contentTimer?.invalidate()
         clockTimer?.invalidate()
+        calendarCollapseTimer?.invalidate()
         cancellables.removeAll()
     }
     
@@ -168,7 +177,61 @@ final class NotchViewModel: ObservableObject {
 
         processNextInQueue()
     }
-    
+
+    /// Open the Calendar in the notch (menu "Show Calendar"). It behaves like a
+    /// peek: if the cursor never comes to the notch it auto-collapses after a
+    /// few seconds; hovering the notch holds it open; leaving the notch
+    /// collapses it. The automatic upcoming-event nudge and hover-to-music are
+    /// suppressed while it's up (`isCalendarPinned`).
+    func showCalendarPanel() {
+        pomodoroIntroWorkItem?.cancel()
+        contentTimer?.invalidate()
+        contentTimer = nil
+        isHoverExpanded = false
+        isCalendarPinned = true
+        previousContent = currentContent
+        currentContent = .calendar(event: calendarService.nextEvent)
+        isExpanded = true
+        scheduleCalendarPeekCollapse()
+    }
+
+    /// Auto-collapse the just-opened calendar if the user never brings the
+    /// cursor over the notch.
+    private func scheduleCalendarPeekCollapse() {
+        calendarCollapseTimer?.invalidate()
+        calendarCollapseTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self = self, self.isCalendarPinned else { return }
+                self.closeCalendar()
+            }
+        }
+    }
+
+    /// Cursor entered the notch while the calendar is up — hold it open.
+    func calendarHoverEntered() {
+        guard isCalendarPinned else { return }
+        calendarCollapseTimer?.invalidate()
+        calendarCollapseTimer = nil
+    }
+
+    /// Cursor left the notch while the calendar is up — collapse it.
+    func calendarHoverExited() {
+        guard isCalendarPinned else { return }
+        closeCalendar()
+    }
+
+    /// Dismiss the calendar and collapse the notch.
+    func closeCalendar() {
+        calendarCollapseTimer?.invalidate()
+        calendarCollapseTimer = nil
+        isCalendarPinned = false
+        isHoverExpanded = false
+        contentTimer?.invalidate()
+        contentTimer = nil
+        currentContent = .collapsed
+        isExpanded = false
+    }
+
     func forceShowContent(_ content: NotchContent) {
         previousContent = currentContent
 
@@ -580,6 +643,10 @@ final class NotchViewModel: ObservableObject {
     private var pendingPulseWorkItem: DispatchWorkItem?
     
     private func handleCalendarEvents(_ events: [CalendarEvent]) {
+        // A pinned calendar (menu "Show Calendar") owns the notch — don't let
+        // the periodic refresh's automatic nudge replace or disturb it.
+        guard !isCalendarPinned else { return }
+
         // Calendar notch nudges are a Pro feature. Gate silently here —
         // unlike Shelf/Pomodoro (user-initiated, so they get an upsell),
         // calendar surfacing is automatic, so a locked free user simply

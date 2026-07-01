@@ -118,6 +118,10 @@ final class GlobalHotkeyManager {
 extension GlobalHotkeyManager {
     /// Virtual key code for the "V" key.
     static let keyCodeV: UInt32 = UInt32(kVK_ANSI_V)
+    /// Virtual key code for the "N" key.
+    static let keyCodeN: UInt32 = UInt32(kVK_ANSI_N)
     /// Carbon modifier mask: command + shift.
     static let modifiersCmdShift: UInt32 = UInt32(cmdKey | shiftKey)
+    /// Carbon modifier mask: control + option.
+    static let modifiersCtrlOption: UInt32 = UInt32(controlKey | optionKey)
 }

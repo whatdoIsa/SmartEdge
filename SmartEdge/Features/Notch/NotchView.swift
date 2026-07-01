@@ -306,6 +306,10 @@ struct NotchView: View {
                     insertion: .move(edge: .bottom).combined(with: .opacity),
                     removal: .move(edge: .bottom).combined(with: .opacity)
                 ))
+                // Tap the pinned calendar to dismiss it (menu re-toggle also works).
+                .onTapGesture {
+                    if viewModel.isCalendarPinned { viewModel.closeCalendar() }
+                }
 
         case .shelf(let operation):
             // The full Shelf list lives in its own centered window now; the

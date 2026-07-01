@@ -186,6 +186,18 @@ final class AppCoordinator: ObservableObject, AppCoordinatorProtocol {
         if !success {
             AppLogger.general.error("Failed to register global hot key \\u{2318}+\\u{21E7}+V — likely taken by another app.")
         }
+
+        // Quick Add event: ⌃⌥N (low-conflict; ⇧⌘N is Finder's New Folder).
+        let quickAddManager = ServiceContainer.shared.quickAddHotkeyManager
+        quickAddManager.onTrigger = { [weak self] in
+            self?.showQuickAdd()
+        }
+        if !quickAddManager.register(
+            keyCode: GlobalHotkeyManager.keyCodeN,
+            modifiers: GlobalHotkeyManager.modifiersCtrlOption
+        ) {
+            AppLogger.general.error("Failed to register quick-add hot key \\u{2303}\\u{2325}N — likely taken by another app.")
+        }
     }
 
     private func fireClipboardStart() async {
@@ -218,6 +230,27 @@ final class AppCoordinator: ObservableObject, AppCoordinatorProtocol {
     func showShelf() {
         guard requirePro("선반") else { return }
         childWindows.showShelf(viewModel: shelfViewModel)
+    }
+
+    /// Toggles a pinned Calendar in the notch. Kept in the notch (not a
+    /// standalone window) so the notch stays the app's home surface — the
+    /// automatic 5s nudge only flashes, this lets the user hold it open.
+    func showCalendar() {
+        if notchViewModel.isCalendarPinned {
+            notchViewModel.closeCalendar()
+            return
+        }
+        guard requirePro("캘린더") else { return }
+        notchViewModel.showCalendarPanel()
+    }
+
+    /// Opens the natural-language Quick Add window (menu / ⌃⌥N) to create an
+    /// event in the user's calendar. Pro-gated like the rest of Calendar.
+    func showQuickAdd() {
+        guard requirePro("캘린더") else { return }
+        childWindows.showQuickAdd(
+            viewModel: QuickAddViewModel(calendarService: ServiceContainer.shared.calendarService)
+        )
     }
 
     /// Forces the notch to show the clipboard history list.

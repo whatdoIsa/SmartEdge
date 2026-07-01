@@ -26,6 +26,7 @@ final class ServiceContainer: ObservableObject {
     lazy var pomodoroService: PomodoroService = PomodoroService()
     lazy var systemStatsService: SystemStatsService = SystemStatsService()
     lazy var globalHotkeyManager: GlobalHotkeyManager = GlobalHotkeyManager()
+    lazy var quickAddHotkeyManager: GlobalHotkeyManager = GlobalHotkeyManager()
     lazy var webhookService: WebhookService = WebhookService()
     
     // MARK: - Shelf Services
